@@ -48,6 +48,10 @@ class MessageResponse(BaseModel):
 class ChatRequest(BaseModel):
     question: str
 
+@app.get("/")
+async def root():
+    return {"message": "DJ RAG Backend is running!"}
+
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
