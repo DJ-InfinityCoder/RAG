@@ -40,6 +40,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  icons: {
+    icon: "/dj_rag_logo.png", // Path to your favicon file in the public directory
+  },
 };
 
 export const viewport = {
