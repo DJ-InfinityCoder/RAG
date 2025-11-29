@@ -11,3 +11,4 @@ langgraph
 python-dotenv
 pandas
 openpyxl
+psycopg2-binary
