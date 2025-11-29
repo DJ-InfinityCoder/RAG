@@ -8,6 +8,8 @@ import FloatingLines from '@/components/FloatingLines';
 
 import Navbar from '@/components/Navbar';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function Home() {
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
@@ -18,7 +20,7 @@ export default function Home() {
     setIsCreating(true);
     try {
       // First, check if there's an existing empty session (session without a file uploaded)
-      const listRes = await fetch('http://localhost:8000/sessions');
+      const listRes = await fetch(`${API_URL}/sessions`);
       const sessions = await listRes.json();
 
       // Find the first session that doesn't have a file uploaded
@@ -29,7 +31,7 @@ export default function Home() {
         router.push(`/chat/${emptySession.id}`);
       } else {
         // Create a new session only if no empty session exists
-        const res = await fetch('http://localhost:8000/sessions', {
+        const res = await fetch(`${API_URL}/sessions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: 'New Chat' }),

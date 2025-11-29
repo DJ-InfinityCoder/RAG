@@ -20,6 +20,8 @@ interface Session {
     created_at: string;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function ChatPage() {
     const params = useParams();
     const router = useRouter();
@@ -47,7 +49,7 @@ export default function ChatPage() {
 
     const fetchSessions = async () => {
         try {
-            const res = await fetch('http://localhost:8000/sessions');
+            const res = await fetch(`${API_URL}/sessions`);
             const data = await res.json();
             setSessions(data);
         } catch (error) {
@@ -57,7 +59,7 @@ export default function ChatPage() {
 
     const fetchCurrentSession = async (id: string) => {
         try {
-            const res = await fetch('http://localhost:8000/sessions');
+            const res = await fetch(`${API_URL}/sessions`);
             const data = await res.json();
             const session = data.find((s: Session) => s.id === id);
             setCurrentSession(session || null);
@@ -68,7 +70,7 @@ export default function ChatPage() {
 
     const fetchMessages = async (id: string) => {
         try {
-            const res = await fetch(`http://localhost:8000/sessions/${id}/messages`);
+            const res = await fetch(`${API_URL}/sessions/${id}/messages`);
             const data = await res.json();
             setMessages(data);
         } catch (error) {
@@ -78,7 +80,7 @@ export default function ChatPage() {
 
     const handleNewChat = async () => {
         try {
-            const res = await fetch('http://localhost:8000/sessions', {
+            const res = await fetch(`${API_URL}/sessions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title: 'New Chat' }),
@@ -98,7 +100,7 @@ export default function ChatPage() {
 
     const handleDeleteSession = async (id: string) => {
         try {
-            const res = await fetch(`http://localhost:8000/sessions/${id}`, {
+            const res = await fetch(`${API_URL}/sessions/${id}`, {
                 method: 'DELETE',
             });
 
@@ -126,7 +128,7 @@ export default function ChatPage() {
         try {
             const formData = new FormData();
             formData.append('file', file);
-            const res = await fetch(`http://localhost:8000/sessions/${sessionId}/upload`, {
+            const res = await fetch(`${API_URL}/sessions/${sessionId}/upload`, {
                 method: 'POST',
                 body: formData,
             });
@@ -150,7 +152,7 @@ export default function ChatPage() {
         setIsLoading(true);
 
         try {
-            const res = await fetch(`http://localhost:8000/sessions/${sessionId}/chat`, {
+            const res = await fetch(`${API_URL}/sessions/${sessionId}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question: content }),

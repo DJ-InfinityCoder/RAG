@@ -4,7 +4,7 @@ import sys
 from database import SessionLocal
 from models import ChatSession, ChatMessage
 
-API_URL = "http://localhost:8000"
+API_URL = os.environ.get("API_URL", "http://localhost:8000")
 
 def verify_delete():
     print("Starting verification...")
