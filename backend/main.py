@@ -27,8 +27,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize RAG Engine
-rag_engine = RAGEngine()
+# Initialize RAGEngine lazily
+_rag_engine = None
+
+def get_rag_engine():
+    global _rag_engine
+    if _rag_engine is None:
+        try:
+            _rag_engine = RAGEngine()
+        except Exception as e:
+            print(f"Failed to initialize RAGEngine: {e}")
+            raise HTTPException(status_code=500, detail=f"RAG Engine initialization failed: {str(e)}")
+    return _rag_engine
 
 class CreateSessionRequest(BaseModel):
     title: str = "New Chat"
@@ -119,7 +129,8 @@ async def chat(session_id: str, request: ChatRequest, db: Session = Depends(get_
 
     try:
         # Generate answer with session context and history
-        answer = rag_engine.chat(request.question, session_id, chat_history)
+        rag = get_rag_engine()
+        answer = rag.chat(request.question, session_id, chat_history)
         
         # Save assistant message
         bot_msg = ChatMessage(session_id=session_id, role="assistant", content=answer)
@@ -145,7 +156,8 @@ async def upload_document(session_id: str, file: UploadFile = File(...), db: Ses
     try:
         content = await file.read()
         # Pass session_id to process_file
-        num_chunks = await rag_engine.process_file(content, file.filename, session_id)
+        rag = get_rag_engine()
+        num_chunks = await rag.process_file(content, file.filename, session_id)
         
         # Update session title and file_name
         session.title = file.filename
@@ -174,7 +186,8 @@ async def delete_session(session_id: str, db: Session = Depends(get_db)):
 
     try:
         # Delete from Pinecone
-        rag_engine.delete_vectors(session_id)
+        rag = get_rag_engine()
+        rag.delete_vectors(session_id)
         
         # Delete from Database (cascade will handle messages)
         db.delete(session)
