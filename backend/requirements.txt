@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+langchain
+langchain-google-genai
+langchain-pinecone
+pinecone-client
+python-multipart
+pypdf
+docx2txt
+langgraph
+python-dotenv
+pandas
+openpyxl
