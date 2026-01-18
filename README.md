@@ -3,15 +3,14 @@
 # 🧠 DJ Rag
 ### Advanced Retrieval-Augmented Generation System
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Gemini AI](https://img.shields.io/badge/Gemini%20AI-1.5%20Flash-4285F4?style=for-the-badge&logo=google)](https://deepmind.google/technologies/gemini/)
-[![Pinecone](https://img.shields.io/badge/Pinecone-Vector%20DB-black?style=for-the-badge&logo=pinecone)](https://www.pinecone.io/)
-[![LangChain](https://img.shields.io/badge/LangChain-0.1-1C3C3C?style=for-the-badge&logo=langchain)](https://www.langchain.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Gemini AI](https://img.shields.io/badge/Gemini%20AI-4285F4?style=for-the-badge&logo=google)](https://deepmind.google/technologies/gemini/)
+[![Pinecone](https://img.shields.io/badge/Pinecone-black?style=for-the-badge&logo=pinecone)](https://www.pinecone.io/)
+[![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain)](https://www.langchain.com/)
 
 <p align="center">
   <a href="https://djrag.dilip.live"><strong>🚀 Live Demo</strong></a> •
-  <a href="https://djragbackend.onrender.com/docs"><strong>� Live API</strong></a> •
   <a href="https://github.com/DJ-InfinityCoder/RagFrontend"><strong>�️ Frontend Repo</strong></a> •
   <a href="https://github.com/DJ-InfinityCoder/RagBackend"><strong>⚙️ Backend Repo</strong></a>
 </p>
@@ -24,7 +23,7 @@
 
 **DJ Rag** is a production-grade Retrieval-Augmented Generation (RAG) application engineered for high-precision document analysis and intelligent Q&A. By combining the speed of **FastAPI** with the interactivity of **Next.js**, it delivers a seamless experience for querying complex documents.
 
-Powered by **Google's Gemini 1.5 Flash** and **Pinecone Vector Database**, DJ Rag employs a sophisticated hybrid search strategy with **FlashRank** reranking to ensure the most relevant context is always retrieved.
+Powered by **Google's Gemini 2.5 Flash** and **Pinecone Vector Database**, DJ Rag employs a sophisticated hybrid search strategy with **FlashRank** reranking to ensure the most relevant context is always retrieved.
 
 ---
 
@@ -43,7 +42,7 @@ graph TD
         Pinecone -->|Top-k Docs| RAG
         RAG -->|2. Rerank| FlashRank[🔍 FlashRank]
         FlashRank -->|Top-n Context| RAG
-        RAG -->|3. Generate| Gemini[✨ Gemini LLM]
+        RAG -->|3. Generate| Gemini[✨ Gemini 2.5 Flash]
         API -->|Persist| DB[(💾 SQLite)]
     end
 ```
@@ -67,14 +66,14 @@ graph TD
 ## 🛠️ Technology Stack
 
 ### 🖥️ Frontend
-*   **Framework:** Next.js 14 (App Router)
+*   **Framework:** Next.js (App Router)
 *   **Styling:** Tailwind CSS, Framer Motion
 *   **State:** SWR, React Hooks
 *   **Icons:** Lucide React
 
 ### ⚙️ Backend
 *   **Core:** FastAPI, Pydantic
-*   **AI/ML:** LangChain, Google Gemini, FlashRank
+*   **AI/ML:** LangChain, Google Gemini 2.5 Flash, FlashRank
 *   **Database:** Pinecone (Vector), SQLite (Relational)
 *   **Infrastructure:** Docker, Render (Backend), Vercel (Frontend)
 

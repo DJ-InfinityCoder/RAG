@@ -73,7 +73,7 @@ npm run dev`}
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="bg-[#1e1f20] p-6 rounded-xl border border-[#444746]">
-                                <h3 className="font-semibold text-[#a8c7fa] mb-2">Frontend (Next.js 15)</h3>
+                                <h3 className="font-semibold text-[#a8c7fa] mb-2">Frontend (Next.js 16)</h3>
                                 <ul className="list-disc pl-5 text-[#c4c7c5] space-y-1">
                                     <li>App Router & Server Components</li>
                                     <li>Tailwind CSS for Styling</li>

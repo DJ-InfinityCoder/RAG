@@ -16,7 +16,7 @@ graph TD
         Pinecone -->|Top-10 Docs| RAG
         RAG -->|2. Rerank| FlashRank[FlashRank Reranker]
         FlashRank -->|Top-5 Docs| RAG
-        RAG -->|3. Generate| Gemini[Google Gemini LLM]
+        RAG -->|3. Generate| Gemini[Google Gemini 2.5 Flash]
     end
     
     subgraph "Ingestion"
