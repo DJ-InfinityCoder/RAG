@@ -2,7 +2,7 @@
 
 The backend service for the DJ Rag application, a powerful Retrieval-Augmented Generation (RAG) system built with FastAPI and LangChain.
 
-[**📂 GitHub Repository**](https://github.com/DJ-InfinityCoder/RagBackend)
+[**🔌 Live API**](https://djragbackend.onrender.com/docs) | [**📂 GitHub Repository**](https://github.com/DJ-InfinityCoder/RagBackend)
 
 ## 🏗️ Architecture
 
@@ -89,7 +89,7 @@ graph TD
     python main.py
     ```
     The API will be available at `http://localhost:8000`.
-    API Documentation: `http://localhost:8000/docs`
+    Live API Documentation: `https://djragbackend.onrender.com/docs`
 
 ## 👨‍💻 Author
 
