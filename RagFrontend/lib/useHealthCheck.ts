@@ -8,8 +8,14 @@ export function useHealthCheck() {
 
     const checkHealth = useCallback(async () => {
         setIsChecking(true);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
         try {
-            const response = await fetch(`${API_BASE_URL}/health`);
+            const response = await fetch(`${API_BASE_URL}/health`, {
+                signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
             if (response.ok) {
                 setIsOnline(true);
             } else {

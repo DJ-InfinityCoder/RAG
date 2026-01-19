@@ -29,6 +29,11 @@ export function HealthStatus() {
             >
                 <RefreshCw className={cn("w-3 h-3 text-[#a8c7fa]", isChecking && "animate-spin")} />
             </button>
+            {isOnline === false && (
+                <span className="hidden sm:inline text-[10px] text-red-400 font-medium animate-pulse">
+                    Click refresh icon to start backend
+                </span>
+            )}
         </div>
     );
 }

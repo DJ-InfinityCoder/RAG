@@ -3,8 +3,31 @@ import { ArrowRight, MessageSquare, Shield, Zap, Github, Globe, Linkedin, Code, 
 import { HealthStatus } from "@/components/HealthStatus";
 
 export default function Home() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "DJ Rag",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "Enterprise-grade Retrieval-Augmented Generation (RAG) platform powered by Google Gemini and Pinecone.",
+    "author": {
+      "@type": "Person",
+      "name": "Dilip Meghwal",
+      "url": "https://dilip.live"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#131314] text-[#e3e3e3] flex flex-col font-sans selection:bg-[#4285f4] selection:text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-[#131314]/80 backdrop-blur-md border-b border-[#444746]">
         <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
