@@ -1,0 +1,37 @@
+import { useState, useEffect, useCallback } from "react";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+
+export function useHealthCheck() {
+    const [isOnline, setIsOnline] = useState<boolean | null>(null);
+    const [isChecking, setIsChecking] = useState(false);
+
+    const checkHealth = useCallback(async () => {
+        setIsChecking(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/health`);
+            if (response.ok) {
+                setIsOnline(true);
+            } else {
+                setIsOnline(false);
+            }
+        } catch (error) {
+            setIsOnline(false);
+        } finally {
+            // Add a small delay to show the animation if manually triggered
+            setTimeout(() => setIsChecking(false), 500);
+        }
+    }, []);
+
+    useEffect(() => {
+        // Check immediately
+        checkHealth();
+
+        // Poll every 30 seconds
+        const interval = setInterval(checkHealth, 30000);
+
+        return () => clearInterval(interval);
+    }, [checkHealth]);
+
+    return { isOnline, isChecking, checkHealth };
+}

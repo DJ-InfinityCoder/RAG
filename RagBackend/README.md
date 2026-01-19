@@ -2,7 +2,7 @@
 
 The backend service for the DJ Rag application, a powerful Retrieval-Augmented Generation (RAG) system built with FastAPI and LangChain.
 
-[**🔌 Live API**](https://djragbackend.onrender.com/docs) | [**📂 GitHub Repository**](https://github.com/DJ-InfinityCoder/RagBackend)
+[**📂 GitHub Repository**](https://github.com/DJ-InfinityCoder/RagBackend)
 
 ## 🏗️ Architecture
 
@@ -16,7 +16,7 @@ graph TD
         Pinecone -->|Top-10 Docs| RAG
         RAG -->|2. Rerank| FlashRank[FlashRank Reranker]
         FlashRank -->|Top-5 Docs| RAG
-        RAG -->|3. Generate| Gemini[Google Gemini 2.5 Flash]
+        RAG -->|3. Generate| Gemini[Google Gemini LLM]
     end
     
     subgraph "Ingestion"
@@ -89,7 +89,7 @@ graph TD
     python main.py
     ```
     The API will be available at `http://localhost:8000`.
-    Live API Documentation: `https://djragbackend.onrender.com/docs`
+    API Documentation: `http://localhost:8000/docs`
 
 ## 👨‍💻 Author
 

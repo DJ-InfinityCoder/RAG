@@ -50,7 +50,6 @@ The application follows the Next.js App Router architecture:
 3.  Set up environment variables (`.env.local`):
     ```env
     NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-    # For production: NEXT_PUBLIC_API_BASE_URL=https://djragbackend.onrender.com
     ```
 
 4.  Run the development server:
