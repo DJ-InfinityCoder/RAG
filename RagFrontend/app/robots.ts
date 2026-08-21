@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: "/",
             disallow: ["/api/", "/admin/"],
         },
-        sitemap: "https://djrag.dilip.live/sitemap.xml",
+        sitemap: "https://askdoc.dilip.website/sitemap.xml",
     };
 }

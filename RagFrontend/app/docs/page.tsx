@@ -1,148 +1,171 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowLeft, Server, Database, Code, Cloud, Terminal, Settings } from "lucide-react";
+import { ArrowLeft, Server, Database, Code, Cloud, Terminal, Settings, Layers, ShieldCheck, Activity, Mail } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { HealthStatus } from "@/components/HealthStatus";
 
 export default function Documentation() {
     return (
-        <div className="min-h-screen bg-[#131314] text-[#e3e3e3] font-sans selection:bg-[#4285f4] selection:text-white">
-            <nav className="sticky top-0 z-50 bg-[#131314]/80 backdrop-blur-md border-b border-[#444746]">
+        <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] font-serif selection:bg-[var(--accent-color)] selection:text-white flex flex-col justify-between">
+            {/* Navbar */}
+            <nav className="sticky top-0 z-50 bg-[var(--bg-main)]/85 backdrop-blur-md border-b border-[var(--border-color)]">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2 text-[#c4c7c5] hover:text-[#e3e3e3] transition-colors">
-                        <ArrowLeft className="w-5 h-5" />
+                    <Link href="/" className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors text-sm font-semibold">
+                        <ArrowLeft className="w-4 h-4" />
                         <span>Back to Home</span>
                     </Link>
-                    <div className="font-semibold text-[#e3e3e3]">Documentation</div>
+                    <div className="flex items-center gap-3">
+                        <HealthStatus />
+                        <ThemeToggle />
+                        <Link
+                            href="/chat"
+                            className="h-9 px-4 rounded-full bg-[var(--accent-color)] text-white text-xs sm:text-sm font-bold hover:bg-[var(--accent-hover)] transition-all flex items-center justify-center"
+                        >
+                            Open Chat
+                        </Link>
+                    </div>
                 </div>
             </nav>
 
-            <main className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-12">
+            <main className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-12 flex-1 w-full">
                 {/* Sidebar Navigation */}
                 <aside className="hidden md:block col-span-1 sticky top-24 h-fit space-y-4">
-                    <div className="font-semibold text-[#a8c7fa] mb-2">Contents</div>
-                    <ul className="space-y-2 text-sm text-[#c4c7c5]">
-                        <li><a href="#getting-started" className="hover:text-[#e3e3e3] transition-colors">Getting Started</a></li>
-                        <li><a href="#architecture" className="hover:text-[#e3e3e3] transition-colors">Architecture</a></li>
-                        <li><a href="#configuration" className="hover:text-[#e3e3e3] transition-colors">Configuration</a></li>
-                        <li><a href="#deployment" className="hover:text-[#e3e3e3] transition-colors">Deployment</a></li>
-                        <li><a href="#remarks" className="hover:text-[#e3e3e3] transition-colors">Remarks & Limits</a></li>
+                    <div className="font-bold text-[var(--accent-color)] text-sm tracking-wider uppercase">Table of Contents</div>
+                    <ul className="space-y-2 text-sm font-medium text-[var(--text-muted)]">
+                        <li><a href="#getting-started" className="hover:text-[var(--text-main)] transition-colors">1. Getting Started</a></li>
+                        <li><a href="#architecture" className="hover:text-[var(--text-main)] transition-colors">2. Architecture & Pipeline</a></li>
+                        <li><a href="#configuration" className="hover:text-[var(--text-main)] transition-colors">3. Environment Configuration</a></li>
+                        <li><a href="#observability" className="hover:text-[var(--text-main)] transition-colors">4. Observability & LangSmith</a></li>
+                        <li><a href="#deployment" className="hover:text-[var(--text-main)] transition-colors">5. Deployment Guide</a></li>
+                        <li><a href="#support" className="hover:text-[var(--text-main)] transition-colors">6. Support & Inquiries</a></li>
                     </ul>
                 </aside>
 
                 {/* Main Content */}
                 <div className="col-span-1 md:col-span-3 space-y-16">
-
                     {/* Getting Started */}
-                    <section id="getting-started" className="scroll-mt-24">
-                        <h1 className="text-4xl font-bold mb-6 text-[#e3e3e3]">Getting Started</h1>
-                        <p className="text-lg text-[#c4c7c5] mb-6">
-                            DJ Rag is a powerful RAG (Retrieval-Augmented Generation) platform that allows you to chat with your documents.
-                            It uses advanced vector search and LLMs to provide accurate, citation-backed answers.
+                    <section id="getting-started" className="scroll-mt-24 space-y-4">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[var(--accent-color)]/10 text-[var(--accent-color)] text-xs font-bold uppercase tracking-wider">
+                            <Terminal className="w-3.5 h-3.5" />
+                            <span>Developer Guide</span>
+                        </div>
+                        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[var(--text-main)]">
+                            AskDoc Documentation
+                        </h1>
+                        <p className="text-lg text-[var(--text-muted)] font-medium leading-relaxed">
+                            AskDoc is a production-grade Retrieval-Augmented Generation (RAG) intelligence platform powered by Google Gemini, Pinecone vector search, Supabase PostgreSQL, and LangGraph.
                         </p>
-                        <div className="bg-[#1e1f20] border border-[#444746] rounded-xl p-6">
-                            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2"><Terminal className="w-5 h-5 text-[#a8c7fa]" /> Quick Start</h3>
-                            <pre className="bg-[#131314] p-4 rounded-lg overflow-x-auto text-sm text-[#e3e3e3] font-mono">
-                                {`# Clone the repository
-git clone https://github.com/DJ-InfinityCoder/RAG.git
 
-# Install Backend Dependencies
+                        <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-6 space-y-4">
+                            <h3 className="text-xl font-bold text-[var(--text-main)] flex items-center gap-2">
+                                <Terminal className="w-5 h-5 text-[var(--accent-color)]" />
+                                Quick Start Command Line
+                            </h3>
+                            <pre className="bg-[var(--bg-hover)] p-4 rounded-xl overflow-x-auto text-xs sm:text-sm text-[var(--text-main)] font-mono border border-[var(--border-color)]">
+{`# 1. Clone the repository
+git clone https://github.com/DJ-InfinityCoder/RAG.git
+cd RAG
+
+# 2. Setup & Start Backend (FastAPI + LangGraph)
 cd RagBackend
 python -m venv venv
-source venv/bin/activate
+.\\venv\\Scripts\\activate   # On Linux/macOS: source venv/bin/activate
 pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
 
-# Install Frontend Dependencies
+# 3. Setup & Start Frontend (Next.js 16 App Router)
 cd ../RagFrontend
 npm install
-
-# Run the Application
-# Terminal 1: Backend
-./run.sh
-# Terminal 2: Frontend
 npm run dev`}
                             </pre>
                         </div>
                     </section>
 
                     {/* Architecture */}
-                    <section id="architecture" className="scroll-mt-24">
-                        <h2 className="text-3xl font-bold mb-6 text-[#e3e3e3] flex items-center gap-3">
-                            <Server className="w-8 h-8 text-[#d96570]" /> Architecture
+                    <section id="architecture" className="scroll-mt-24 space-y-6">
+                        <h2 className="text-3xl font-extrabold text-[var(--text-main)] flex items-center gap-3">
+                            <Server className="w-7 h-7 text-[var(--accent-color)]" />
+                            System Architecture
                         </h2>
-                        <p className="text-[#c4c7c5] mb-6">
-                            The system is built on a modern stack designed for performance and scalability.
+                        <p className="text-[var(--text-muted)] font-medium">
+                            The application is decoupled into modular layers for maximum reliability, speed, and clean code organization:
                         </p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-[#1e1f20] p-6 rounded-xl border border-[#444746]">
-                                <h3 className="font-semibold text-[#a8c7fa] mb-2">Frontend (Next.js 16)</h3>
-                                <ul className="list-disc pl-5 text-[#c4c7c5] space-y-1">
-                                    <li>App Router & Server Components</li>
-                                    <li>Tailwind CSS for Styling</li>
-                                    <li>SWR for Data Fetching & Caching</li>
-                                    <li>Framer Motion for Animations</li>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)] space-y-3">
+                                <h3 className="font-bold text-[var(--text-main)] text-lg flex items-center gap-2">
+                                    <Code className="w-5 h-5 text-[var(--accent-color)]" />
+                                    Frontend (Next.js 16)
+                                </h3>
+                                <ul className="list-disc pl-5 text-sm text-[var(--text-muted)] space-y-1.5 font-medium">
+                                    <li>App Router, Server Components & Suspense</li>
+                                    <li>Tailwind CSS design system with Dark/Light theme</li>
+                                    <li>SSE Streaming token reader with real-time UI updates</li>
+                                    <li>SWR for client-side caching & optimistic mutations</li>
                                 </ul>
                             </div>
-                            <div className="bg-[#1e1f20] p-6 rounded-xl border border-[#444746]">
-                                <h3 className="font-semibold text-[#d96570] mb-2">Backend (FastAPI)</h3>
-                                <ul className="list-disc pl-5 text-[#c4c7c5] space-y-1">
-                                    <li>Async API Endpoints</li>
-                                    <li>LangChain for RAG Pipeline</li>
-                                    <li>Flashrank for Reranking</li>
-                                    <li>LRU Caching for Performance</li>
+
+                            <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)] space-y-3">
+                                <h3 className="font-bold text-[var(--text-main)] text-lg flex items-center gap-2">
+                                    <Layers className="w-5 h-5 text-amber-500" />
+                                    Backend (Modular FastAPI)
+                                </h3>
+                                <ul className="list-disc pl-5 text-sm text-[var(--text-muted)] space-y-1.5 font-medium">
+                                    <li>7-layer architecture (<code className="text-xs">app/api</code>, <code className="text-xs">app/core</code>, <code className="text-xs">app/services</code>)</li>
+                                    <li>Document parsers (PDF with OCR, DOCX, PPTX, XLSX, CSV)</li>
+                                    <li>FlashRank reranker for high-precision context filtering</li>
+                                    <li>In-memory sliding-window rate limiter & query caching</li>
                                 </ul>
                             </div>
-                            <div className="bg-[#1e1f20] p-6 rounded-xl border border-[#444746]">
-                                <h3 className="font-semibold text-[#81c995] mb-2">Database & Vector Store</h3>
-                                <ul className="list-disc pl-5 text-[#c4c7c5] space-y-1">
-                                    <li>Pinecone for Vector Embeddings</li>
-                                    <li>Neon (PostgreSQL) for Chat History</li>
-                                    <li>Google Gemini Pro for Embeddings & Generation</li>
+
+                            <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)] space-y-3">
+                                <h3 className="font-bold text-[var(--text-main)] text-lg flex items-center gap-2">
+                                    <Database className="w-5 h-5 text-blue-500" />
+                                    Storage & Vector Database
+                                </h3>
+                                <ul className="list-disc pl-5 text-sm text-[var(--text-muted)] space-y-1.5 font-medium">
+                                    <li>Pinecone Serverless Index (1024-dim Llama embeddings)</li>
+                                    <li>Supabase PostgreSQL for full-text search & chat memory</li>
+                                    <li>Supabase Storage for secure multi-format document hosting</li>
+                                    <li>PostgresSaver checkpointer for LangGraph state persistence</li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)] space-y-3">
+                                <h3 className="font-bold text-[var(--text-main)] text-lg flex items-center gap-2">
+                                    <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                                    Security & Auth
+                                </h3>
+                                <ul className="list-disc pl-5 text-sm text-[var(--text-muted)] space-y-1.5 font-medium">
+                                    <li>Supabase JWT token verification (HS256)</li>
+                                    <li>User-isolated namespaces in Pinecone and PostgreSQL</li>
+                                    <li>Cascade deletion across vector DB, storage bucket & SQL</li>
+                                    <li>Strict 10MB file size boundary checks</li>
                                 </ul>
                             </div>
                         </div>
                     </section>
 
                     {/* Configuration */}
-                    <section id="configuration" className="scroll-mt-24">
-                        <h2 className="text-3xl font-bold mb-6 text-[#e3e3e3] flex items-center gap-3">
-                            <Settings className="w-8 h-8 text-[#fdd663]" /> Configuration
+                    <section id="configuration" className="scroll-mt-24 space-y-6">
+                        <h2 className="text-3xl font-extrabold text-[var(--text-main)] flex items-center gap-3">
+                            <Settings className="w-7 h-7 text-[var(--accent-color)]" />
+                            Environment Variables
                         </h2>
-                        <p className="text-[#c4c7c5] mb-6">
-                            Configure the application using environment variables. Create a <code>.env</code> file in both backend and frontend directories.
-                        </p>
 
                         <div className="space-y-6">
-                            <div>
-                                <h3 className="text-xl font-semibold mb-3 text-[#e3e3e3]">Backend (.env)</h3>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm text-[#c4c7c5]">
-                                        <thead className="bg-[#1e1f20] text-[#e3e3e3]">
-                                            <tr>
-                                                <th className="p-3 rounded-tl-lg">Variable</th>
-                                                <th className="p-3 rounded-tr-lg">Description</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-[#444746]">
-                                            <tr><td className="p-3 font-mono">GOOGLE_API_KEY</td><td className="p-3">API Key for Gemini Pro & Embeddings</td></tr>
-                                            <tr><td className="p-3 font-mono">PINECONE_API_KEY</td><td className="p-3">API Key for Pinecone Vector DB</td></tr>
-                                            <tr><td className="p-3 font-mono">PINECONE_ENV</td><td className="p-3">Pinecone Environment Region</td></tr>
-                                            <tr><td className="p-3 font-mono">DATABASE_URL</td><td className="p-3">PostgreSQL Connection String (Neon)</td></tr>
-                                        </tbody>
-                                    </table>
+                            <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] overflow-hidden">
+                                <div className="p-4 bg-[var(--bg-hover)] border-b border-[var(--border-color)] font-bold text-sm text-[var(--text-main)]">
+                                    Backend Configuration (<code className="font-mono">RagBackend/.env</code>)
                                 </div>
-                            </div>
-
-                            <div>
-                                <h3 className="text-xl font-semibold mb-3 text-[#e3e3e3]">Frontend (.env.local)</h3>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm text-[#c4c7c5]">
-                                        <thead className="bg-[#1e1f20] text-[#e3e3e3]">
-                                            <tr>
-                                                <th className="p-3 rounded-tl-lg">Variable</th>
-                                                <th className="p-3 rounded-tr-lg">Description</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-[#444746]">
-                                            <tr><td className="p-3 font-mono">NEXT_PUBLIC_API_BASE_URL</td><td className="p-3">URL of the deployed Backend API</td></tr>
+                                <div className="p-4 overflow-x-auto">
+                                    <table className="w-full text-left text-xs sm:text-sm text-[var(--text-muted)]">
+                                        <tbody className="divide-y divide-[var(--border-color)] font-medium">
+                                            <tr><td className="p-2.5 font-mono text-[var(--text-main)] font-bold">GOOGLE_API_KEY</td><td className="p-2.5">Google Gemini API key for chat synthesis and generation</td></tr>
+                                            <tr><td className="p-2.5 font-mono text-[var(--text-main)] font-bold">PINECONE_API_KEY</td><td className="p-2.5">Pinecone vector database API key</td></tr>
+                                            <tr><td className="p-2.5 font-mono text-[var(--text-main)] font-bold">DATABASE_URL</td><td className="p-2.5">PostgreSQL connection string (Supabase)</td></tr>
+                                            <tr><td className="p-2.5 font-mono text-[var(--text-main)] font-bold">ALLOWED_ORIGINS</td><td className="p-2.5">Comma-separated CORS origins (e.g. <code className="font-mono text-xs">https://askdoc.dilip.website</code>)</td></tr>
+                                            <tr><td className="p-2.5 font-mono text-[var(--text-main)] font-bold">GEMINI_MODEL</td><td className="p-2.5">Active Gemini model (default: <code className="font-mono text-xs">gemini-3.6-flash</code>)</td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -150,62 +173,52 @@ npm run dev`}
                         </div>
                     </section>
 
-                    {/* Deployment */}
-                    <section id="deployment" className="scroll-mt-24">
-                        <h2 className="text-3xl font-bold mb-6 text-[#e3e3e3] flex items-center gap-3">
-                            <Cloud className="w-8 h-8 text-[#a8c7fa]" /> Deployment
+                    {/* Observability */}
+                    <section id="observability" className="scroll-mt-24 space-y-4">
+                        <h2 className="text-3xl font-extrabold text-[var(--text-main)] flex items-center gap-3">
+                            <Activity className="w-7 h-7 text-[var(--accent-color)]" />
+                            Observability & LangSmith
                         </h2>
-                        <div className="space-y-6 text-[#c4c7c5]">
-                            <p>
-                                You can deploy this project for free using popular hosting providers.
-                            </p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-[#1e1f20] p-6 rounded-xl border border-[#444746]">
-                                    <h3 className="font-semibold text-[#e3e3e3] mb-2">Frontend (Vercel)</h3>
-                                    <ol className="list-decimal pl-5 space-y-2">
-                                        <li>Push your code to GitHub.</li>
-                                        <li>Import the repo in Vercel.</li>
-                                        <li>Set the Root Directory to <code>RagFrontend</code>.</li>
-                                        <li>Add <code>NEXT_PUBLIC_API_BASE_URL</code> env var.</li>
-                                        <li>Deploy!</li>
-                                    </ol>
-                                </div>
-                                <div className="bg-[#1e1f20] p-6 rounded-xl border border-[#444746]">
-                                    <h3 className="font-semibold text-[#e3e3e3] mb-2">Backend (Render)</h3>
-                                    <ol className="list-decimal pl-5 space-y-2">
-                                        <li>Create a new Web Service.</li>
-                                        <li>Connect your GitHub repo.</li>
-                                        <li>Set Root Directory to <code>RagBackend</code>.</li>
-                                        <li>Set Build Command: <code>pip install -r requirements.txt</code>.</li>
-                                        <li>Set Start Command: <code>uvicorn main:app --host 0.0.0.0 --port 8000</code>.</li>
-                                        <li>Add all backend env vars.</li>
-                                    </ol>
-                                </div>
-                            </div>
+                        <p className="text-[var(--text-muted)] font-medium">
+                            AskDoc natively streams telemetry and trace metadata directly to LangSmith dashboards:
+                        </p>
+                        <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-6 space-y-3 font-medium text-sm text-[var(--text-muted)]">
+                            <p><strong className="text-[var(--text-main)]">Traced Nodes:</strong> <code className="text-xs bg-[var(--bg-hover)] px-2 py-0.5 rounded border border-[var(--border-color)]">classify_intent</code>, <code className="text-xs bg-[var(--bg-hover)] px-2 py-0.5 rounded border border-[var(--border-color)]">rephrase_query</code>, <code className="text-xs bg-[var(--bg-hover)] px-2 py-0.5 rounded border border-[var(--border-color)]">retrieve</code>, <code className="text-xs bg-[var(--bg-hover)] px-2 py-0.5 rounded border border-[var(--border-color)]">rerank</code>, <code className="text-xs bg-[var(--bg-hover)] px-2 py-0.5 rounded border border-[var(--border-color)]">grade_retrieval</code>, <code className="text-xs bg-[var(--bg-hover)] px-2 py-0.5 rounded border border-[var(--border-color)]">generate_answer</code>.</p>
+                            <p><strong className="text-[var(--text-main)]">Filterable Tags:</strong> <code className="text-xs font-mono">session:&#123;id&#125;</code>, <code className="text-xs font-mono">user:&#123;id&#125;</code>, <code className="text-xs font-mono">askdoc-streaming</code>.</p>
                         </div>
                     </section>
 
-                    {/* Remarks */}
-                    <section id="remarks" className="scroll-mt-24">
-                        <h2 className="text-3xl font-bold mb-6 text-[#e3e3e3]">Remarks & Limits</h2>
-                        <div className="bg-[#1e1f20]/50 border border-[#d96570]/30 p-6 rounded-xl">
-                            <ul className="list-disc pl-5 text-[#c4c7c5] space-y-2">
-                                <li>
-                                    <strong className="text-[#e3e3e3]">Provider Limits:</strong> Free tier accounts for Pinecone and Gemini have rate limits. If you encounter errors, wait a moment and try again.
-                                </li>
-                                <li>
-                                    <strong className="text-[#e3e3e3]">Cold Starts:</strong> On free hosting like Render, the backend may spin down after inactivity. The first request might take 30-60 seconds to wake it up.
-                                </li>
-                                <li>
-                                    <strong className="text-[#e3e3e3]">File Size:</strong> Currently optimized for documents under 10MB to ensure fast processing within serverless timeout limits.
-                                </li>
-                            </ul>
+                    {/* Support */}
+                    <section id="support" className="scroll-mt-24 space-y-4">
+                        <h2 className="text-3xl font-extrabold text-[var(--text-main)] flex items-center gap-3">
+                            <Mail className="w-7 h-7 text-[var(--accent-color)]" />
+                            Support & Contact
+                        </h2>
+                        <p className="text-[var(--text-muted)] font-medium">
+                            Have questions, suggestions, or need help deploying AskDoc in your organization?
+                        </p>
+                        <div>
+                            <a href="mailto:contact@dilip.website" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--accent-color)] hover:bg-[var(--bg-hover)] font-bold text-sm transition-all">
+                                <Mail className="w-4 h-4" />
+                                contact@dilip.website
+                            </a>
                         </div>
                     </section>
-
                 </div>
             </main>
+
+            {/* Footer */}
+            <footer className="border-t border-[var(--border-color)] bg-[var(--bg-card)] mt-12">
+                <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-[var(--text-muted)] font-medium">
+                    <p>© 2026 AskDoc. Built with ❤️ by Dilip Meghwal.</p>
+                    <div className="flex gap-6">
+                        <Link href="/privacy" className="hover:text-[var(--text-main)] transition-colors">Privacy Policy</Link>
+                        <Link href="/terms" className="hover:text-[var(--text-main)] transition-colors">Terms of Service</Link>
+                        <Link href="/evaluation" className="hover:text-[var(--text-main)] transition-colors">Evaluation Report</Link>
+                        <Link href="/chat" className="hover:text-[var(--text-main)] transition-colors">Chat</Link>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 }

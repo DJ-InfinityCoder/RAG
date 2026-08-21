@@ -1,76 +1,110 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileText, CheckCircle2, AlertTriangle, ShieldCheck, Mail } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function TermsOfService() {
     return (
-        <div className="min-h-screen bg-[#131314] text-[#e3e3e3] font-sans selection:bg-[#4285f4] selection:text-white">
-            <nav className="sticky top-0 z-50 bg-[#131314]/80 backdrop-blur-md border-b border-[#444746]">
-                <div className="max-w-4xl mx-auto px-6 h-16 flex items-center">
-                    <Link href="/" className="flex items-center gap-2 text-[#c4c7c5] hover:text-[#e3e3e3] transition-colors">
-                        <ArrowLeft className="w-5 h-5" />
+        <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] font-serif selection:bg-[var(--accent-color)] selection:text-white flex flex-col justify-between">
+            {/* Navbar */}
+            <nav className="sticky top-0 z-50 bg-[var(--bg-main)]/85 backdrop-blur-md border-b border-[var(--border-color)]">
+                <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+                    <Link href="/" className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors text-sm font-semibold">
+                        <ArrowLeft className="w-4 h-4" />
                         <span>Back to Home</span>
                     </Link>
+                    <div className="flex items-center gap-3">
+                        <div className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-[var(--accent-color)] to-amber-500 bg-clip-text text-transparent">
+                            AskDoc
+                        </div>
+                        <ThemeToggle />
+                    </div>
                 </div>
             </nav>
 
-            <main className="max-w-4xl mx-auto px-6 py-12">
-                <h1 className="text-4xl font-bold mb-8 text-[#e3e3e3]">Terms of Service</h1>
-                <div className="prose prose-invert max-w-none text-[#c4c7c5]">
-                    <p className="lead text-lg mb-8">
-                        Last updated: {new Date().toLocaleDateString()}
+            <main className="max-w-4xl mx-auto px-6 py-12 flex-1 w-full space-y-8">
+                <div>
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[var(--accent-color)]/10 text-[var(--accent-color)] text-xs font-bold uppercase tracking-wider mb-4">
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>Legal Agreement</span>
+                    </div>
+                    <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[var(--text-main)] mb-3">
+                        Terms of Service
+                    </h1>
+                    <p className="text-sm font-medium text-[var(--text-muted)]">
+                        Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                     </p>
+                </div>
 
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-semibold text-[#e3e3e3] mb-4">1. Acceptance of Terms</h2>
+                <div className="space-y-8 text-[var(--text-muted)] leading-relaxed font-medium text-base">
+                    {/* Section 1 */}
+                    <section className="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-3">
+                        <h2 className="text-xl font-bold text-[var(--text-main)] flex items-center gap-2">
+                            <CheckCircle2 className="w-5 h-5 text-[var(--accent-color)]" />
+                            1. Acceptance of Terms
+                        </h2>
                         <p>
-                            By accessing or using DJ Rag, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
+                            By accessing or using AskDoc ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to all terms and conditions, you may not access or use the application.
                         </p>
                     </section>
 
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-semibold text-[#e3e3e3] mb-4">2. Use License</h2>
+                    {/* Section 2 */}
+                    <section className="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-3">
+                        <h2 className="text-xl font-bold text-[var(--text-main)] flex items-center gap-2">
+                            <ShieldCheck className="w-5 h-5 text-[var(--accent-color)]" />
+                            2. Permitted Use & Document Ownership
+                        </h2>
                         <p>
-                            Permission is granted to temporarily download one copy of the materials (information or software) on DJ Rag's website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
+                            You retain full ownership of all documents, data, and content you upload to AskDoc. You grant AskDoc a limited license solely to process, chunk, vectorize, and retrieve your content to answer your queries during your session.
                         </p>
-                        <ul className="list-disc pl-6 mt-4 space-y-2">
-                            <li>Modify or copy the materials;</li>
-                            <li>Use the materials for any commercial purpose, or for any public display (commercial or non-commercial);</li>
-                            <li>Attempt to decompile or reverse engineer any software contained on DJ Rag's website;</li>
-                            <li>Remove any copyright or other proprietary notations from the materials; or</li>
-                            <li>Transfer the materials to another person or "mirror" the materials on any other server.</li>
+                        <ul className="list-disc pl-6 space-y-2 text-sm">
+                            <li>You agree not to upload harmful, malicious, or unlawful materials.</li>
+                            <li>You are responsible for ensuring you hold appropriate rights to any confidential documents you upload.</li>
+                            <li>The service enforces a 10MB maximum file size limit per upload.</li>
                         </ul>
                     </section>
 
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-semibold text-[#e3e3e3] mb-4">3. Disclaimer</h2>
+                    {/* Section 3 */}
+                    <section className="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-3">
+                        <h2 className="text-xl font-bold text-[var(--text-main)] flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5 text-amber-500" />
+                            3. AI Disclaimer & Limitations
+                        </h2>
                         <p>
-                            The materials on DJ Rag's website are provided on an 'as is' basis. DJ Rag makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+                            AskDoc utilizes advanced language models (Google Gemini) and vector retrieval systems (Pinecone). While the system employs self-correcting retrieval, FlashRank reranking, and citation verifications, AI responses should be reviewed for critical financial, legal, or medical decisions.
                         </p>
                     </section>
 
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-semibold text-[#e3e3e3] mb-4">4. Limitations</h2>
+                    {/* Section 4 */}
+                    <section className="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-3">
+                        <h2 className="text-xl font-bold text-[var(--text-main)] flex items-center gap-2">
+                            <Mail className="w-5 h-5 text-[var(--accent-color)]" />
+                            4. Contact & Inquiries
+                        </h2>
                         <p>
-                            In no event shall DJ Rag or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on DJ Rag's website, even if DJ Rag or a DJ Rag authorized representative has been notified orally or in writing of the possibility of such damage.
+                            For inquiries regarding terms, licensing, or enterprise deployment, please reach out to us at:
                         </p>
-                    </section>
-
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-semibold text-[#e3e3e3] mb-4">5. Accuracy of Materials</h2>
-                        <p>
-                            The materials appearing on DJ Rag's website could include technical, typographical, or photographic errors. DJ Rag does not warrant that any of the materials on its website are accurate, complete or current. DJ Rag may make changes to the materials contained on its website at any time without notice. However, DJ Rag does not make any commitment to update the materials.
-                        </p>
-                    </section>
-
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-semibold text-[#e3e3e3] mb-4">6. Governing Law</h2>
-                        <p>
-                            These terms and conditions are governed by and construed in accordance with the laws of India and you irrevocably submit to the exclusive jurisdiction of the courts in that State or location.
+                        <p className="pt-1">
+                            <a href="mailto:contact@dilip.website" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--bg-hover)] border border-[var(--border-color)] text-[var(--accent-color)] hover:underline font-bold text-sm">
+                                <Mail className="w-4 h-4" />
+                                contact@dilip.website
+                            </a>
                         </p>
                     </section>
                 </div>
             </main>
+
+            {/* Footer */}
+            <footer className="border-t border-[var(--border-color)] bg-[var(--bg-card)] mt-12">
+                <div className="max-w-4xl mx-auto px-6 py-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-[var(--text-muted)] font-medium">
+                    <p>© 2026 AskDoc. Built with ❤️ by Dilip Meghwal.</p>
+                    <div className="flex gap-6">
+                        <Link href="/privacy" className="hover:text-[var(--text-main)] transition-colors">Privacy Policy</Link>
+                        <Link href="/docs" className="hover:text-[var(--text-main)] transition-colors">Documentation</Link>
+                        <Link href="/chat" className="hover:text-[var(--text-main)] transition-colors">Chat</Link>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 }

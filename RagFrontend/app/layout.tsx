@@ -1,27 +1,31 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { Providers } from "@/components/Providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const cormorantGaramond = Cormorant_Garamond({
+  variable: "--font-cormorant",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://djrag.dilip.live"),
+  metadataBase: new URL("https://askdoc.dilip.website"),
   title: {
-    default: "DJ Rag | Enterprise-Grade RAG AI Chat",
-    template: "%s | DJ Rag",
+    default: "AskDoc | Enterprise-Grade Document AI Chat",
+    template: "%s | AskDoc",
   },
-  description: "Advanced Retrieval-Augmented Generation (RAG) platform powered by Google Gemini and Pinecone. Upload documents and chat with your data instantly.",
-  keywords: ["RAG", "AI", "Chat", "Document Analysis", "PDF Chat", "Gemini", "Pinecone", "Vector Database", "Next.js", "FastAPI"],
-  authors: [{ name: "Dilip Meghwal", url: "https://dilip.live" }],
+  description: "Advanced Retrieval-Augmented Generation (RAG) document intelligence platform powered by Google Gemini and Pinecone. Upload documents and chat with your data instantly.",
+  keywords: ["AskDoc", "RAG", "AI", "Chat", "Document Analysis", "PDF Chat", "Gemini", "Pinecone", "Vector Database", "Next.js", "FastAPI"],
+  authors: [{ name: "Dilip Meghwal", url: "https://dilipmeghwal.in" }],
   creator: "Dilip Meghwal",
   publisher: "Dilip Meghwal",
   robots: {
@@ -38,30 +42,30 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://djrag.dilip.live",
-    title: "DJ Rag | Enterprise-Grade RAG AI Chat",
-    description: "Chat with your documents using advanced AI. Powered by Google Gemini 2.5 Flash and Pinecone vector search.",
-    siteName: "DJ Rag",
+    url: "https://askdoc.dilip.website",
+    title: "AskDoc | Enterprise-Grade Document AI Chat",
+    description: "Chat with your documents using advanced AI. Powered by Google Gemini and Pinecone vector search.",
+    siteName: "AskDoc",
     images: [
       {
         url: "/djraglogo.png",
         width: 1200,
         height: 630,
-        alt: "DJ Rag - Advanced RAG Platform",
+        alt: "AskDoc - Advanced RAG Platform",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "DJ Rag | Enterprise-Grade RAG AI Chat",
-    description: "Chat with your documents using advanced AI. Powered by Google Gemini 2.5 Flash and Pinecone vector search.",
+    title: "AskDoc | Enterprise-Grade Document AI Chat",
+    description: "Chat with your documents using advanced AI. Powered by Google Gemini and Pinecone vector search.",
     images: ["/djraglogo.png"],
     creator: "@dilip_maurya",
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/djraglogo.png",
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/logo.png",
   },
   manifest: "/manifest.json",
 };
@@ -72,12 +76,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${cormorantGaramond.variable}`}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
+        className={`${jakarta.variable} ${cormorantGaramond.variable} antialiased font-sans bg-[var(--bg-main)] text-[var(--text-main)]`}
       >
-        <OfflineBanner />
-        {children}
+        <Providers>
+          <ThemeProvider>
+            <OfflineBanner />
+            {children}
+          </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

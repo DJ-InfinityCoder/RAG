@@ -18,3 +18,12 @@ langchain-community
 requests
 flashrank
 python-pptx
+pyjwt
+cryptography
+tenacity
+langgraph-checkpoint-postgres
+psycopg-pool
+pdfplumber
+pytesseract
+pdf2image
+python-docx

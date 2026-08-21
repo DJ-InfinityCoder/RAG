@@ -2,8 +2,8 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: "DJ Rag - Enterprise RAG AI",
-        short_name: "DJ Rag",
+        name: "AskDoc - Enterprise RAG AI",
+        short_name: "AskDoc",
         description: "Advanced Retrieval-Augmented Generation (RAG) platform powered by Google Gemini and Pinecone.",
         start_url: "/",
         display: "standalone",

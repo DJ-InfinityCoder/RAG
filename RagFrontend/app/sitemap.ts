@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = "https://djrag.dilip.live";
+    const baseUrl = "https://askdoc.dilip.website";
 
     return [
         {

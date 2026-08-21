@@ -2,22 +2,29 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Loader2, Plus } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatArea } from "@/components/ChatArea";
 import { InputArea } from "@/components/InputArea";
+import { AuthModal } from "@/components/AuthModal";
+import { ApiKeySetupModal } from "@/components/ApiKeySetupModal";
 import {
     createSession,
-    sendMessage,
+    sendMessageStream,
     uploadFile,
     deleteSession,
     deleteAllSessions,
+    updateSessionTitle,
+    hasConfiguredApiKey,
+    incrementFreePromptCount,
+    FREE_PROMPT_LIMIT,
+    FREE_SESSION_LIMIT,
+    FREE_DOCUMENT_LIMIT,
     Message,
     API_BASE_URL
 } from "@/lib/api";
 import { useSessions, useMessages } from "@/lib/hooks";
 import { mutate } from "swr";
+import { useAuth } from "@/components/AuthProvider";
 
 interface ChatInterfaceProps {
     initialSessionId?: string;
@@ -25,54 +32,90 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ initialSessionId }: ChatInterfaceProps) {
     const router = useRouter();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(initialSessionId || null);
     const [isSending, setIsSending] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadingFileName, setUploadingFileName] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+    const [apiKeyModalReason, setApiKeyModalReason] = useState<"onboarding" | "limit_reached" | "doc_limit">("onboarding");
+    const [currentStepStatus, setCurrentStepStatus] = useState<string | null>(null);
 
-    // SWR Hooks
-    const { sessions, mutate: mutateSessions, isLoading: isSessionsLoading } = useSessions();
+    // TanStack Query Hooks (using persistent global auth)
+    const { sessions, mutate: mutateSessions, isLoading: isSessionsLoading } = useSessions(isAuthenticated);
     const { messages, mutate: mutateMessages, isLoading: isMessagesLoading } = useMessages(currentSessionId);
 
-    // Update currentSessionId when initialSessionId changes
+    // Update currentSessionId when initialSessionId prop changes or browser popstate occurs
     useEffect(() => {
         if (initialSessionId && initialSessionId !== currentSessionId) {
             setCurrentSessionId(initialSessionId);
         }
-    }, [initialSessionId, currentSessionId]);
+
+        const handlePopState = () => {
+            const match = window.location.pathname.match(/\/chat\/([^/?#]+)/);
+            if (match && match[1]) {
+                setCurrentSessionId(match[1]);
+            } else if (window.location.pathname.startsWith("/chat")) {
+                setCurrentSessionId(null);
+            }
+        };
+
+        window.addEventListener("popstate", handlePopState);
+        return () => window.removeEventListener("popstate", handlePopState);
+    }, [initialSessionId]);
 
     const handleNewChat = async () => {
+        if (!isAuthenticated) {
+            setIsAuthModalOpen(true);
+            return;
+        }
+
+        // Free tier: 1 session limit if no custom API key
+        if (!hasConfiguredApiKey() && sessions && sessions.length >= FREE_SESSION_LIMIT) {
+            setApiKeyModalReason("limit_reached");
+            setIsApiKeyModalOpen(true);
+            return;
+        }
+
         setIsCreating(true);
         try {
             const newSession = await createSession();
-            await mutateSessions(); // Refresh sessions
-
-            // Pre-seed cache to avoid skeleton loader
-            mutate(`${API_BASE_URL}/sessions/${newSession.id}/messages`, [], false);
-
+            await mutateSessions();
             setCurrentSessionId(newSession.id);
-            setIsSidebarOpen(false);
-            router.push(`/chat/${newSession.id}`);
-        } catch (error) {
+            window.history.pushState(null, "", `/chat/${newSession.id}`);
+        } catch (error: any) {
             console.error("Failed to create new session:", error);
+            if (error?.message?.includes("Free demo") || error?.message?.includes("402")) {
+                setApiKeyModalReason("limit_reached");
+                setIsApiKeyModalOpen(true);
+            }
         } finally {
             setIsCreating(false);
         }
     };
 
-    const handleSelectSession = (id: string) => {
-        setCurrentSessionId(id);
-        setIsSidebarOpen(false);
-        router.push(`/chat/${id}`);
+    const handleSelectSession = (sessionId: string) => {
+        setCurrentSessionId(sessionId);
+        window.history.pushState(null, "", `/chat/${sessionId}`);
     };
 
     const handleDeleteSession = async (sessionId: string) => {
         try {
             await deleteSession(sessionId);
-            await mutateSessions(); // Refresh sessions
+            await mutateSessions();
+
             if (currentSessionId === sessionId) {
-                setCurrentSessionId(null);
-                router.push("/chat");
+                const remaining = sessions?.filter((s) => s.id !== sessionId) || [];
+                if (remaining.length > 0) {
+                    setCurrentSessionId(remaining[0].id);
+                    window.history.pushState(null, "", `/chat/${remaining[0].id}`);
+                } else {
+                    setCurrentSessionId(null);
+                    window.history.pushState(null, "", `/chat`);
+                }
             }
         } catch (error) {
             console.error("Failed to delete session:", error);
@@ -90,7 +133,98 @@ export function ChatInterface({ initialSessionId }: ChatInterfaceProps) {
         }
     };
 
-    const handleSendMessage = async (content: string, files: File[]) => {
+    // Immediate Document Upload & Indexing when file is selected
+    const handleUploadFiles = async (files: File[]) => {
+        if (!files || files.length === 0 || isUploading || isSending) return;
+        if (!isAuthenticated) {
+            setIsAuthModalOpen(true);
+            return;
+        }
+
+        // Free tier: 1 document limit if no custom API key
+        if (!hasConfiguredApiKey()) {
+            const currentSession = sessions?.find(s => s.id === currentSessionId);
+            const hasDocument = currentSession?.file_name || (sessions && sessions.some(s => s.file_name));
+            if (hasDocument) {
+                setApiKeyModalReason("doc_limit");
+                setIsApiKeyModalOpen(true);
+                return;
+            }
+        }
+
+        setIsUploading(true);
+        let sessionId = currentSessionId;
+
+        // Ensure session exists
+        if (!sessionId) {
+            try {
+                const newSession = await createSession();
+                await mutateSessions();
+                sessionId = newSession.id;
+                setCurrentSessionId(sessionId);
+                window.history.pushState(null, "", `/chat/${newSession.id}`);
+            } catch (error: any) {
+                console.error("Failed to create session for upload:", error);
+                if (error?.message?.includes("Free demo") || error?.message?.includes("402")) {
+                    setApiKeyModalReason("limit_reached");
+                    setIsApiKeyModalOpen(true);
+                }
+                setIsUploading(false);
+                return;
+            }
+        }
+
+        for (const file of files) {
+            setUploadingFileName(file.name);
+            setCurrentStepStatus(`Indexing ${file.name}...`);
+
+            try {
+                await uploadFile(sessionId, file);
+                await mutateSessions();
+                await mutateMessages();
+            } catch (error: any) {
+                console.error(`Failed to upload ${file.name}:`, error);
+                if (error?.message?.includes("Free demo") || error?.message?.includes("402")) {
+                    setApiKeyModalReason("doc_limit");
+                    setIsApiKeyModalOpen(true);
+                } else {
+                    await mutateMessages((curr) => [
+                        ...(curr || []),
+                        {
+                            id: Date.now(),
+                            role: "assistant",
+                            content: `**Failed to upload \`${file.name}\`**: ${error?.message || "Upload error occurred"}`,
+                            sources: null,
+                            created_at: new Date().toISOString()
+                        }
+                    ], { revalidate: false });
+                }
+            }
+        }
+
+        setUploadingFileName(null);
+        setCurrentStepStatus(null);
+        setIsUploading(false);
+    };
+
+    const handleSendMessage = async (content: string, files?: File[]) => {
+        if (isSending || isUploading) return;
+        if (!isAuthenticated) {
+            setIsAuthModalOpen(true);
+            return;
+        }
+
+        // Free tier prompt limit check: Max 2 messages if no custom API key
+        if (!hasConfiguredApiKey()) {
+            const assistantMsgCount = (messages || []).filter(m => m.role === "assistant").length;
+            if (assistantMsgCount >= FREE_PROMPT_LIMIT) {
+                setApiKeyModalReason("limit_reached");
+                setIsApiKeyModalOpen(true);
+                return;
+            }
+        }
+
+        setIsSending(true);
         let sessionId = currentSessionId;
 
         // Create session if none exists
@@ -100,29 +234,24 @@ export function ChatInterface({ initialSessionId }: ChatInterfaceProps) {
                 await mutateSessions();
                 sessionId = newSession.id;
                 setCurrentSessionId(sessionId);
-                router.push(`/chat/${newSession.id}`);
-            } catch (error) {
+                window.history.pushState(null, "", `/chat/${newSession.id}`);
+            } catch (error: any) {
                 console.error("Failed to create session:", error);
+                if (error?.message?.includes("Free demo") || error?.message?.includes("402")) {
+                    setApiKeyModalReason("limit_reached");
+                    setIsApiKeyModalOpen(true);
+                }
+                setIsSending(false);
                 return;
             }
         }
 
-        setIsSending(true);
-
-        // Upload files first
-        if (files.length > 0) {
-            for (const file of files) {
-                try {
-                    await uploadFile(sessionId, file);
-                    mutateSessions(); // Refresh title
-
-                } catch (error) {
-                    console.error(`Failed to upload ${file.name}:`, error);
-                }
-            }
+        // Upload any extra attached files
+        if (files && files.length > 0) {
+            await handleUploadFiles(files);
         }
 
-        // Send text message
+        // Send text message with real-time SSE streaming
         if (content.trim()) {
             const tempUserMsg: Message = {
                 id: Date.now(),
@@ -132,134 +261,167 @@ export function ChatInterface({ initialSessionId }: ChatInterfaceProps) {
                 created_at: new Date().toISOString(),
             };
 
-            // Optimistic update
-            await mutateMessages(async (currentMessages: Message[] | undefined) => {
-                return [...(currentMessages || []), tempUserMsg];
+            const tempBotMsgId = Date.now() + 1;
+            const tempBotMsg: Message = {
+                id: tempBotMsgId,
+                role: "assistant",
+                content: "",
+                sources: null,
+                created_at: new Date().toISOString(),
+            };
+
+            await mutateMessages((currentMessages: Message[] | undefined) => {
+                return [...(currentMessages || []), tempUserMsg, tempBotMsg];
             }, { revalidate: false });
 
+            let accumulatedContent = "";
+            setCurrentStepStatus(null);
+
             try {
-                const response = await sendMessage(sessionId, content);
+                await sendMessageStream(sessionId, content, (event) => {
+                    if (event.type === "status") {
+                        if (event.label) {
+                            setCurrentStepStatus(event.label);
+                        }
+                    } else if (event.type === "token" && event.content) {
+                        setCurrentStepStatus(null);
+                        accumulatedContent += event.content;
+                        const currentText = accumulatedContent;
+                        mutateMessages((currentMessages: Message[] | undefined) => {
+                            if (!currentMessages) return [];
+                            return currentMessages.map((m) =>
+                                m.id === tempBotMsgId ? { ...m, content: currentText } : m
+                            );
+                        }, { revalidate: false });
+                    } else if (event.type === "done") {
+                        setCurrentStepStatus(null);
+                        const finalAnswer = event.answer || accumulatedContent;
+                        mutateMessages((currentMessages: Message[] | undefined) => {
+                            if (!currentMessages) return [];
+                            return currentMessages.map((m) =>
+                                m.id === tempBotMsgId
+                                    ? {
+                                        ...m,
+                                        content: finalAnswer,
+                                        sources: event.sources || null,
+                                        metrics: event.metrics || undefined,
+                                    }
+                                    : m
+                            );
+                        }, { revalidate: false });
 
-                const botMsg: Message = {
-                    id: Date.now() + 1,
-                    role: "assistant",
-                    content: response.answer,
-                    sources: response.sources,
-                    metrics: response.metrics,
-                    created_at: new Date().toISOString()
-                };
+                        // Increment free prompt counter if user is on free tier
+                        if (!hasConfiguredApiKey()) {
+                            incrementFreePromptCount(sessionId || undefined);
+                        }
+                    } else if (event.type === "error") {
+                        setCurrentStepStatus(null);
+                        const errorContent = event.content || "An error occurred during response generation.";
+                        mutateMessages((currentMessages: Message[] | undefined) => {
+                            if (!currentMessages) return [];
+                            return currentMessages.map((m) =>
+                                m.id === tempBotMsgId
+                                    ? {
+                                        ...m,
+                                        content: `**Error:** ${errorContent}`,
+                                    }
+                                    : m
+                            );
+                        }, { revalidate: false });
 
-                await mutateMessages(async (currentMessages: Message[] | undefined) => {
-                    return [...(currentMessages || []), botMsg];
-                }, { revalidate: false });
+                        if (errorContent.includes("Free trial limit") || errorContent.includes("Gemini API Key")) {
+                            setApiKeyModalReason("limit_reached");
+                            setIsApiKeyModalOpen(true);
+                        }
+                    }
+                });
 
-            } catch (error) {
+                await mutateSessions();
+                await mutateMessages();
+            } catch (error: any) {
                 console.error("Failed to send message:", error);
-                // Rollback if needed (SWR handles revalidation)
-                mutateMessages();
+                setCurrentStepStatus(null);
+                if (error?.message?.includes("Free trial limit") || error?.message?.includes("402")) {
+                    setApiKeyModalReason("limit_reached");
+                    setIsApiKeyModalOpen(true);
+                }
+                await mutateMessages();
             }
         }
 
         setIsSending(false);
     };
 
-    const handleIngest = async () => {
-        await mutateSessions();
-        // Add a system message to indicate success
-        const systemMsg: Message = {
-            id: Date.now(),
-            role: "assistant",
-            content: "**System**: Text ingested successfully. You can now ask questions about it.",
-            sources: null,
-            created_at: new Date().toISOString(),
-        };
-        await mutateMessages(async (currentMessages: Message[] | undefined) => {
-            return [...(currentMessages || []), systemMsg];
-        }, { revalidate: false });
-    };
+    const currentSession = sessions?.find((s) => s.id === currentSessionId);
 
     return (
-        <div className="flex h-screen bg-[#131314] overflow-hidden">
+        <div className="flex h-screen bg-[var(--bg-main)] text-[var(--text-main)] overflow-hidden font-sans">
             <Sidebar
                 isOpen={isSidebarOpen}
                 setIsOpen={setIsSidebarOpen}
-                sessions={sessions}
+                sessions={sessions || []}
                 currentSessionId={currentSessionId}
                 onSelectSession={handleSelectSession}
                 onNewChat={handleNewChat}
                 onDeleteSession={handleDeleteSession}
                 onDeleteAllSessions={handleDeleteAllSessions}
+                onUpdateSessionTitle={async (sessionId, newTitle) => {
+                    await updateSessionTitle(sessionId, newTitle);
+                    await mutateSessions();
+                }}
                 isLoading={isSessionsLoading}
             />
 
-            <div className="flex-1 flex flex-col h-full relative">
-                {/* Header for Mobile */}
-                <div className="md:hidden p-4 flex items-center border-b border-[#444746]">
-                    <button
-                        onClick={() => setIsSidebarOpen(true)}
-                        className="p-2 -ml-2 hover:bg-[#333537] rounded-full text-[#e3e3e3]"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="w-6 h-6"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                            />
-                        </svg>
-                    </button>
-                    <Link href="/" className="ml-2 font-semibold text-[#e3e3e3] hover:opacity-80 transition-opacity">DJ Rag</Link>
-                </div>
+            <main className="flex-1 flex flex-col h-full min-w-0 bg-[var(--bg-main)] relative">
+                <ChatArea
+                    messages={messages || []}
+                    isLoading={isMessagesLoading && !!currentSessionId}
+                    sessionTitle={currentSession?.title}
+                    sessionDocument={currentSession ? {
+                        file_name: currentSession.file_name || null,
+                        file_size: currentSession.file_size || null,
+                        file_url: currentSession.file_url || null,
+                    } : null}
+                    statusLabel={currentStepStatus}
+                    isSidebarOpen={isSidebarOpen}
+                    onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                    onNewChat={handleNewChat}
+                    onSendMessage={handleSendMessage}
+                />
 
-                {currentSessionId ? (
-                    <>
-                        <ChatArea
-                            messages={messages}
-                            isLoading={isSending}
-                            sessionTitle={sessions?.find(s => s.id === currentSessionId)?.title || "Chat"}
-                            isHistoryLoading={isMessagesLoading}
-                        />
+                <InputArea
+                    onSendMessage={handleSendMessage}
+                    onUploadFiles={handleUploadFiles}
+                    isUploading={isUploading}
+                    uploadingFileName={uploadingFileName}
+                    currentSessionId={currentSessionId}
+                    attachedDocuments={currentSession?.file_name ? [{
+                        name: currentSession.file_name,
+                        size: currentSession.file_size || null,
+                        url: currentSession.file_url || null
+                    }] : []}
+                    onIngest={async () => {
+                        await mutateSessions();
+                        await mutateMessages();
+                    }}
+                />
+            </main>
 
-                        <div className="p-4">
-                            <InputArea
-                                onSendMessage={handleSendMessage}
-                                currentSessionId={currentSessionId}
-                                onIngest={handleIngest}
-                            />
-                        </div>
-                    </>
-                ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-[#e3e3e3] p-4">
-                        <div className="mb-8 text-center">
-                            <h1 className="text-4xl font-bold mb-2">DJ Rag</h1>
-                            <p className="text-[#c4c7c5]">Your intelligent document assistant</p>
-                        </div>
+            <ApiKeySetupModal
+                isOpen={isApiKeyModalOpen}
+                onClose={() => setIsApiKeyModalOpen(false)}
+                reason={apiKeyModalReason}
+                onSuccess={() => {
+                    mutateSessions();
+                    mutateMessages();
+                }}
+            />
 
-                        <button
-                            onClick={handleNewChat}
-                            disabled={isCreating}
-                            className="flex items-center gap-2 px-6 py-3 bg-[#a8c7fa] text-[#0f0f0f] rounded-full font-medium hover:bg-[#8ab4f8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isCreating ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : (
-                                <Plus className="w-5 h-5" />
-                            )}
-                            <span>{isCreating ? "Creating..." : "Start New Chat"}</span>
-                        </button>
-
-                        <p className="mt-8 text-[#444746] text-sm">
-                            Or select a recent chat from the sidebar
-                        </p>
-                    </div>
-                )}
-            </div>
+            <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
+                canClose={true}
+            />
         </div>
     );
 }
