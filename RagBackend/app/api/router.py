@@ -34,10 +34,11 @@ def create_app() -> FastAPI:
 
     app = FastAPI(title="AskDoc API")
 
-    # CORS Setup - Specific origins from env
+    # CORS Setup - Specific origins from env + regex for Vercel deployment preview and prod URLs
     app.add_middleware(
         CORSMiddleware,
         allow_origins=ALLOWED_ORIGINS,
+        allow_origin_regex=r"^https?:\/\/(localhost(:\d+)?|127\.0\.0\.1(:\d+)?|.*\.vercel\.app|.*\.website)$",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

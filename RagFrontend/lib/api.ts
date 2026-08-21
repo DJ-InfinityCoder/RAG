@@ -1,6 +1,6 @@
 import { getAuthToken } from "./supabase";
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
 
 export const GEMINI_API_KEY_STORAGE_KEY = "askdoc_gemini_api_key";
 export const GEMINI_MODEL_STORAGE_KEY = "askdoc_gemini_model";
