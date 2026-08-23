@@ -558,9 +558,11 @@ Context:
     def process_file(self, file_content: bytes, filename: str, session_id: str = None, user_id: str = None):
         # Create a temp file to save the uploaded content
         suffix = os.path.splitext(filename)[1]
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            tmp.write(file_content)
-            tmp_path = tmp.name
+        temp_dir = tempfile.gettempdir()
+        temp_filename = f"upload_{uuid.uuid4().hex}{suffix}"
+        tmp_path = os.path.join(temp_dir, temp_filename)
+        with open(tmp_path, "wb") as f:
+            f.write(file_content)
 
         try:
             documents = []

@@ -12,20 +12,38 @@ from app.document_processors.base import format_table_as_markdown
 logger = get_logger("askdoc.processors.pdf")
 
 
+def extract_pdf_fallback(pdf_path: str, filename: str) -> List[Document]:
+    try:
+        import pypdf
+        reader = pypdf.PdfReader(pdf_path)
+        documents = []
+        for page_idx, page in enumerate(reader.pages):
+            text = page.extract_text() or ""
+            if text.strip():
+                documents.append(Document(
+                    page_content=text.strip(),
+                    metadata={
+                        "source": filename,
+                        "title": filename,
+                        "page": page_idx + 1,
+                        "page_number": page_idx + 1
+                    }
+                ))
+        return documents
+    except Exception as e:
+        logger.error(f"Fallback pypdf extraction failed for {filename}: {e}")
+        return []
+
+
 def extract_pdf_pages_with_tables(pdf_path: str, filename: str) -> List[Document]:
     """
-    Extracts text and tables from PDF pages using pdfplumber:
-    1. Detects and inlines tables in structured Markdown format.
-    2. Detects repeated headers/footers (>50% pages) and strips them.
-    3. Detects scanned/image-only pages (near-empty text) and falls back to OCR via pdf2image + pytesseract.
-    4. Attaches page and page_number metadata to each page document.
+    Extracts text and tables from PDF pages using pdfplumber with safe pypdf fallback.
     """
     try:
         import pdfplumber
     except ImportError:
-        logger.warning("pdfplumber not available, falling back to PyPDFLoader")
-        loader = PyPDFLoader(pdf_path)
-        return loader.load()
+        logger.warning("pdfplumber not available, falling back to pypdf")
+        return extract_pdf_fallback(pdf_path, filename)
 
     raw_pages_data = []
     
@@ -92,9 +110,8 @@ def extract_pdf_pages_with_tables(pdf_path: str, filename: str) -> List[Document
                     "content": combined_content
                 })
     except Exception as pdf_err:
-        logger.warning(f"pdfplumber extraction error ({pdf_err}), falling back to PyPDFLoader")
-        loader = PyPDFLoader(pdf_path)
-        return loader.load()
+        logger.warning(f"pdfplumber extraction error ({pdf_err}), falling back to pypdf")
+        return extract_pdf_fallback(pdf_path, filename)
 
     if not raw_pages_data:
         return []
