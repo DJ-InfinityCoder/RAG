@@ -39,6 +39,9 @@ export function AuthModal({ isOpen, onClose, onSuccess, canClose = true }: AuthM
                 const { data, error: err } = await supabase.auth.signUp({
                     email,
                     password,
+                    options: {
+                        emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
+                    },
                 });
                 if (err) throw err;
 
@@ -48,7 +51,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, canClose = true }: AuthM
                     onClose();
                 } else if (data.user) {
                     // Account created but email confirmation required
-                    setSuccessMessage("Account created successfully! If email confirmation is enabled on your project, please check your inbox before signing in.");
+                    setSuccessMessage("Account created successfully! Please check your email inbox to verify your account before signing in.");
                     setMode("signin");
                 }
             }

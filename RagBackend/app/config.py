@@ -48,7 +48,7 @@ GEMINI_OUTPUT_COST_PER_1M = float(os.getenv("GEMINI_OUTPUT_COST_PER_1M", "0.30")
 # ─── Application Settings ─────────────────────────────────────────────────────
 ALLOWED_ORIGINS = [
     origin.strip()
-    for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,https://askdoc.dilip.website").split(",")
+    for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,https://askdoc.dilip.website,https://www.askdoc.dilip.website,https://askdoc-backend.vercel.app").split(",")
     if origin.strip()
 ]
 MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "10"))

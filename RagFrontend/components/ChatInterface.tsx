@@ -375,7 +375,9 @@ export function ChatInterface({ initialSessionId }: ChatInterfaceProps) {
             <main className="flex-1 flex flex-col h-full min-w-0 bg-[var(--bg-main)] relative">
                 <ChatArea
                     messages={messages || []}
-                    isLoading={isMessagesLoading && !!currentSessionId}
+                    isLoading={isSending || (isMessagesLoading && !!currentSessionId)}
+                    isUploading={isUploading}
+                    uploadingFileName={uploadingFileName}
                     sessionTitle={currentSession?.title}
                     sessionDocument={currentSession ? {
                         file_name: currentSession.file_name || null,
@@ -418,9 +420,9 @@ export function ChatInterface({ initialSessionId }: ChatInterfaceProps) {
             />
 
             <AuthModal
-                isOpen={isAuthModalOpen}
+                isOpen={(!isAuthLoading && !isAuthenticated) || isAuthModalOpen}
                 onClose={() => setIsAuthModalOpen(false)}
-                canClose={true}
+                canClose={isAuthenticated}
             />
         </div>
     );

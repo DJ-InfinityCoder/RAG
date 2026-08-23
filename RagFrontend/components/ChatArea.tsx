@@ -14,6 +14,8 @@ import { ChatSkeleton } from "./ChatSkeleton";
 interface ChatAreaProps {
     messages: Message[];
     isLoading?: boolean;
+    isUploading?: boolean;
+    uploadingFileName?: string | null;
     sessionTitle?: string;
     sessionDocument?: {
         file_name?: string | null;
@@ -383,7 +385,20 @@ function CitationBadge({
 }
 
 // ---------- Main ChatArea ----------
-export function ChatArea({ messages, isLoading, sessionTitle, sessionDocument, isHistoryLoading, statusLabel, isSidebarOpen, onToggleSidebar, onNewChat, onSendMessage }: ChatAreaProps) {
+export function ChatArea({ 
+    messages, 
+    isLoading, 
+    isUploading = false,
+    uploadingFileName = null,
+    sessionTitle, 
+    sessionDocument, 
+    isHistoryLoading, 
+    statusLabel, 
+    isSidebarOpen, 
+    onToggleSidebar, 
+    onNewChat, 
+    onSendMessage 
+}: ChatAreaProps) {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [expandedSourceIndex, setExpandedSourceIndex] = useState<{ [msgId: number]: number | null }>({});
@@ -398,7 +413,7 @@ export function ChatArea({ messages, isLoading, sessionTitle, sessionDocument, i
         }
     };
 
-    useEffect(() => { scrollToBottom(); }, [messages, isLoading, statusLabel]);
+    useEffect(() => { scrollToBottom(); }, [messages, isLoading, isUploading, statusLabel]);
 
     const handleCopy = useCallback((text: string, id: number) => {
         navigator.clipboard.writeText(text);
@@ -471,6 +486,8 @@ export function ChatArea({ messages, isLoading, sessionTitle, sessionDocument, i
         return children;
     }, [toggleSourceExpand, sessionDocument]);
 
+    const hasDocument = !!sessionDocument?.file_name;
+
     const displayMessages = React.useMemo(() => {
         if (!messages || messages.length === 0) return [];
         const seenIds = new Set<number>();
@@ -482,13 +499,25 @@ export function ChatArea({ messages, isLoading, sessionTitle, sessionDocument, i
             const contentKey = `${msg.role}:${msg.content.trim()}`;
             if (msg.content.trim() && seenContent.has(contentKey)) continue;
 
+            // If top document banner is active, avoid duplicating the system doc confirmation card in the chat stream
+            if (hasDocument && msg.role === "assistant") {
+                const clean = (msg.content || "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
+                if (clean.includes("Uploaded Document:") || clean.includes("Uploading & Indexing")) {
+                    continue;
+                }
+            }
+
             if (msg.id) seenIds.add(msg.id);
             if (msg.content.trim()) seenContent.add(contentKey);
             deduplicated.push(msg);
         }
 
         return deduplicated;
-    }, [messages]);
+    }, [messages, hasDocument]);
+
+    const userMessages = React.useMemo(() => {
+        return displayMessages.filter(m => m.role === "user");
+    }, [displayMessages]);
 
     const lastAssistantIdx = React.useMemo(() => {
         for (let i = displayMessages.length - 1; i >= 0; i--) {
@@ -535,83 +564,186 @@ export function ChatArea({ messages, isLoading, sessionTitle, sessionDocument, i
             </div>
 
             {/* Scroll Area */}
-            <div ref={scrollContainerRef} className={cn("flex-1 overflow-y-auto px-4 sm:px-6 py-6 flex flex-col", displayMessages.length === 0 && "justify-center items-center")}>
+            <div ref={scrollContainerRef} className={cn("flex-1 overflow-y-auto px-4 sm:px-6 py-6 flex flex-col", !hasDocument && displayMessages.length === 0 && !isUploading && "justify-center items-center")}>
                 {isHistoryLoading ? (
                     <ChatSkeleton />
-                ) : displayMessages.length === 0 && !isLoading ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
-                        className="flex flex-col items-center text-center space-y-8 max-w-2xl w-full mx-auto">
-                        <div className="flex flex-col items-center gap-4">
-                            <div className="space-y-2">
-                                <h1 className="text-3xl md:text-4xl font-serif font-bold text-[var(--text-main)] tracking-tight leading-tight">What&apos;s in your documents?</h1>
-                                <p className="text-sm text-[var(--text-muted)] font-serif max-w-md mx-auto leading-relaxed">Upload your PDFs, contracts, or reports and ask anything — get cited, accurate answers instantly.</p>
-                            </div>
-                        </div>
-                        <motion.div initial="hidden" animate="visible" variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.05 } } }} className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full text-left">
-                            {SUGGESTION_CARDS.map((card, index) => {
-                                const IconComponent = card.icon;
-                                return (
-                                    <motion.button key={index} variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.2 } } }}
-                                        onClick={() => handleSuggestionClick(card.prompt)}
-                                        className="group p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]/60 hover:border-[var(--accent-color)]/40 hover:shadow-md transition-all text-left cursor-pointer"
-                                        whileTap={{ scale: 0.98 }}>
-                                        <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mb-3", card.bg)}>
-                                            <IconComponent className={cn("w-4 h-4", card.color)} />
-                                        </div>
-                                        <p className="text-xs font-bold text-[var(--text-main)] mb-1">{card.title}</p>
-                                        <p className="text-xs text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors font-serif leading-relaxed line-clamp-2">&ldquo;{card.prompt}&rdquo;</p>
-                                    </motion.button>
-                                );
-                            })}
-                        </motion.div>
-                    </motion.div>
                 ) : (
-                    <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto px-1.5">
-                        {displayMessages.map((message, msgIndex) => {
-                            const isStreamingMsg = isLoading && msgIndex === lastAssistantIdx && message.role === "assistant";
-                            return (
-                                <motion.div key={message.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22 }}
-                                    className={cn("flex w-full", message.role === "user" ? "justify-end" : "justify-start")}>
-                                    <div className={cn("flex flex-col gap-2 min-w-0", message.role === "user" ? "items-end max-w-[85%]" : "items-start w-full")}>
-                                        {message.needs_clarification && (
-                                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 text-xs font-semibold">
-                                                <HelpCircle className="w-3 h-3" /><span>Clarification needed</span>
-                                            </div>
-                                        )}
-                                        {message.role === "user" ? (
-                                            <div className="flex flex-col items-end gap-1">
-                                                <div className="bg-[var(--accent-color)]/10 border border-[var(--accent-color)]/15 text-[var(--text-main)] rounded-xl rounded-tr-sm px-3 py-1 text-base leading-relaxed font-serif whitespace-pre-wrap">
-                                                    {message.content}
+                    <div className="flex flex-col gap-5 w-full max-w-4xl mx-auto px-1.5 flex-1">
+                        {/* Active Uploading / Indexing State */}
+                        {isUploading && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }} 
+                                animate={{ opacity: 1, y: 0 }} 
+                                className="w-full p-4.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--accent-color)]/50 shadow-md flex items-center gap-4 font-sans mb-3"
+                            >
+                                <div className="w-10 h-10 rounded-xl bg-[var(--accent-color)]/15 text-[var(--accent-color)] flex items-center justify-center shrink-0">
+                                    <Loader2 className="w-5 h-5 text-[var(--accent-color)] animate-spin" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm font-bold text-[var(--text-main)] truncate">
+                                            Indexing & Uploading {uploadingFileName ? `"${uploadingFileName}"` : "document"}...
+                                        </p>
+                                        <span className="px-2 py-0.5 rounded-full bg-[var(--accent-color)]/10 text-[var(--accent-color)] text-[10px] font-bold animate-pulse shrink-0">
+                                            Processing
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                                        Parsing document structure, extracting text chunks, and generating vector embeddings in Pinecone.
+                                    </p>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Pinned Top Document Header Banner */}
+                        {hasDocument && !isUploading && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: -6 }} 
+                                animate={{ opacity: 1, y: 0 }} 
+                                className="w-full p-3.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)]/80 hover:border-[var(--accent-color)]/40 shadow-xs flex items-center justify-between gap-3 font-sans shrink-0"
+                            >
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-9 h-9 rounded-xl bg-[var(--accent-color)]/15 text-[var(--accent-color)] flex items-center justify-center shrink-0">
+                                        <FileText className="w-5 h-5" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-xs sm:text-sm font-bold text-[var(--text-main)] truncate max-w-xs sm:max-w-md">
+                                                {sessionDocument?.file_name}
+                                            </p>
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold border border-emerald-500/20 shrink-0">
+                                                <Check className="w-2.5 h-2.5 stroke-[2.5]" />
+                                                <span>Indexed & Ready</span>
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                                            {sessionDocument?.file_size ? `${(sessionDocument.file_size / (1024 * 1024)).toFixed(2)} MB • ` : ""}Ready for instant search & Q&A
+                                        </p>
+                                    </div>
+                                </div>
+                                {sessionDocument?.file_url && (
+                                    <a
+                                        href={sessionDocument.file_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent-color)]/10 hover:bg-[var(--accent-color)]/20 text-[var(--accent-color)] text-xs font-bold transition-all shrink-0 cursor-pointer"
+                                        title="View original document in new tab"
+                                    >
+                                        <ExternalLink className="w-3.5 h-3.5" />
+                                        <span className="hidden sm:inline">View Doc</span>
+                                    </a>
+                                )}
+                            </motion.div>
+                        )}
+
+                        {/* Empty State when NO document and NO messages */}
+                        {!hasDocument && displayMessages.length === 0 && !isUploading && !isLoading ? (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
+                                className="flex flex-col items-center text-center space-y-8 max-w-2xl w-full mx-auto my-auto">
+                                <div className="flex flex-col items-center gap-4">
+                                    <div className="space-y-2">
+                                        <h1 className="text-3xl md:text-4xl font-serif font-bold text-[var(--text-main)] tracking-tight leading-tight">What&apos;s in your documents?</h1>
+                                        <p className="text-sm text-[var(--text-muted)] font-serif max-w-md mx-auto leading-relaxed">Upload your PDFs, contracts, or reports and ask anything — get cited, accurate answers instantly.</p>
+                                    </div>
+                                </div>
+                                <motion.div initial="hidden" animate="visible" variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.05 } } }} className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full text-left">
+                                    {SUGGESTION_CARDS.map((card, index) => {
+                                        const IconComponent = card.icon;
+                                        return (
+                                            <motion.button key={index} variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.2 } } }}
+                                                onClick={() => handleSuggestionClick(card.prompt)}
+                                                className="group p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]/60 hover:border-[var(--accent-color)]/40 hover:shadow-md transition-all text-left cursor-pointer"
+                                                whileTap={{ scale: 0.98 }}>
+                                                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mb-3", card.bg)}>
+                                                    <IconComponent className={cn("w-4 h-4", card.color)} />
                                                 </div>
-                                                <button
-                                                    onClick={() => handleCopy(message.content, message.id)}
-                                                    className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] rounded-md transition-all font-medium font-sans cursor-pointer"
-                                                    title="Copy message"
-                                                >
-                                                    {copiedId === message.id ? (
-                                                        <>
-                                                            <Check className="w-3 h-3 text-emerald-500" />
-                                                            <span className="text-emerald-600 font-semibold">Copied!</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Copy className="w-3 h-3" />
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <StreamingMessage
-                                                message={message}
-                                                isStreaming={!!isStreamingMsg}
-                                                renderTextWithCitations={renderTextWithCitations}
-                                                expandedSourceIndex={expandedSourceIndex}
-                                                toggleSourceExpand={toggleSourceExpand}
-                                                copiedId={copiedId}
-                                                handleCopy={handleCopy}
-                                                onFrame={scrollToBottom}
-                                            />
-                                        )}
+                                                <p className="text-xs font-bold text-[var(--text-main)] mb-1">{card.title}</p>
+                                                <p className="text-xs text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors font-serif leading-relaxed line-clamp-2">&ldquo;{card.prompt}&rdquo;</p>
+                                            </motion.button>
+                                        );
+                                    })}
+                                </motion.div>
+                            </motion.div>
+                        ) : hasDocument && userMessages.length === 0 && !isUploading && !isLoading ? (
+                            /* Document-Ready Prompt Suggestions when document is loaded but no questions asked yet */
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center text-center space-y-6 max-w-2xl w-full mx-auto my-auto">
+                                <div className="space-y-1.5">
+                                    <h2 className="text-2xl font-serif font-bold text-[var(--text-main)]">
+                                        Ask anything about this document
+                                    </h2>
+                                    <p className="text-xs sm:text-sm text-[var(--text-muted)] font-serif max-w-md mx-auto">
+                                        Select a suggested question below or type your custom prompt in the input box.
+                                    </p>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full text-left">
+                                    {SUGGESTION_CARDS.map((card, index) => {
+                                        const IconComponent = card.icon;
+                                        return (
+                                            <button
+                                                key={index}
+                                                onClick={() => handleSuggestionClick(card.prompt)}
+                                                className="group p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]/70 hover:border-[var(--accent-color)]/40 hover:shadow-sm transition-all text-left cursor-pointer"
+                                            >
+                                                <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center mb-2.5", card.bg)}>
+                                                    <IconComponent className={cn("w-3.5 h-3.5", card.color)} />
+                                                </div>
+                                                <p className="text-xs font-bold text-[var(--text-main)] mb-0.5">{card.title}</p>
+                                                <p className="text-[11px] text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors font-serif leading-relaxed line-clamp-2">
+                                                    &ldquo;{card.prompt}&rdquo;
+                                                </p>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <>
+                                {/* Message stream list */}
+                                {displayMessages.map((message, msgIndex) => {
+                                const isStreamingMsg = isLoading && msgIndex === lastAssistantIdx && message.role === "assistant";
+                                return (
+                                    <motion.div key={message.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22 }}
+                                        className={cn("flex w-full", message.role === "user" ? "justify-end" : "justify-start")}>
+                                        <div className={cn("flex flex-col gap-2 min-w-0", message.role === "user" ? "items-end max-w-[85%]" : "items-start w-full")}>
+                                            {message.needs_clarification && (
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 text-xs font-semibold">
+                                                    <HelpCircle className="w-3 h-3" /><span>Clarification needed</span>
+                                                </div>
+                                            )}
+                                            {message.role === "user" ? (
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <div className="bg-[var(--accent-color)]/10 border border-[var(--accent-color)]/15 text-[var(--text-main)] rounded-xl rounded-tr-sm px-3 py-1 text-base leading-relaxed font-serif whitespace-pre-wrap">
+                                                        {message.content}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleCopy(message.content, message.id)}
+                                                        className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] rounded-md transition-all font-medium font-sans cursor-pointer"
+                                                        title="Copy message"
+                                                    >
+                                                        {copiedId === message.id ? (
+                                                            <>
+                                                                <Check className="w-3 h-3 text-emerald-500" />
+                                                                <span className="text-emerald-600 font-semibold">Copied!</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Copy className="w-3 h-3" />
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <StreamingMessage
+                                                    message={message}
+                                                    isStreaming={!!isStreamingMsg}
+                                                    renderTextWithCitations={renderTextWithCitations}
+                                                    expandedSourceIndex={expandedSourceIndex}
+                                                    toggleSourceExpand={toggleSourceExpand}
+                                                    copiedId={copiedId}
+                                                    handleCopy={handleCopy}
+                                                    onFrame={scrollToBottom}
+                                                />
+                                            )}
 
                                         {/* Enhanced Sources & Citations Section */}
                                         {message.role === "assistant" && message.sources && message.sources.length > 0 && (
@@ -905,6 +1037,8 @@ export function ChatArea({ messages, isLoading, sessionTitle, sessionDocument, i
                                 </motion.div>
                             );
                         })}
+                            </>
+                        )}
 
                         {/* Streaming indicator (only shown before first token) */}
                         {isLoading && (messages.length === 0 || messages[messages.length - 1]?.role === "user" || messages[messages.length - 1]?.content === "") && (

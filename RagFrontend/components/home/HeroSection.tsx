@@ -41,7 +41,8 @@ export function HeroSection() {
                                 cy={node.cy}
                                 r={node.r}
                                 fill="var(--accent-color)"
-                                animate={{ r: [node.r, node.r + 3, node.r], opacity: [0.6, 1, 0.6] }}
+                                animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.25, 1] }}
+                                style={{ transformOrigin: `${node.cx}px ${node.cy}px` }}
                                 transition={{ duration: 3 + i, repeat: Infinity, ease: "easeInOut" }}
                             />
                             <motion.circle
@@ -52,6 +53,7 @@ export function HeroSection() {
                                 strokeWidth="0.8"
                                 opacity="0.4"
                                 animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0.1, 0.4] }}
+                                style={{ transformOrigin: `${node.cx}px ${node.cy}px` }}
                                 transition={{ duration: 4, repeat: Infinity, delay: i * 0.5 }}
                             />
                         </g>
