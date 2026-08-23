@@ -10,7 +10,10 @@ from typing import Dict, Any, List, TYPE_CHECKING
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
-from flashrank import RerankRequest
+try:
+    from flashrank import RerankRequest
+except ImportError:
+    RerankRequest = None
 
 from app.config import GEMINI_INPUT_COST_PER_1M, GEMINI_OUTPUT_COST_PER_1M, get_logger
 from app.services.search import reciprocal_rank_fusion
@@ -181,7 +184,7 @@ def create_node_rerank(engine: "RAGEngine"):
         ]
         
         reranked_docs = []
-        if passages and getattr(engine, "ranker", None) is not None:
+        if passages and RerankRequest is not None and getattr(engine, "ranker", None) is not None:
             try:
                 rerank_request = RerankRequest(query=search_query, passages=passages)
                 results = engine.ranker.rerank(rerank_request)

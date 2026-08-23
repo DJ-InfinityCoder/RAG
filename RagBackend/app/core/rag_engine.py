@@ -19,7 +19,15 @@ from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from flashrank import Ranker
+# FlashRank uses ONNX Runtime which requires /dev/shm for multiprocessing.SemLock.
+# Vercel/Lambda serverless runtimes don't have /dev/shm, so we import conditionally.
+IS_SERVERLESS = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+Ranker = None
+if not IS_SERVERLESS:
+    try:
+        from flashrank import Ranker
+    except ImportError:
+        pass
 from langgraph.checkpoint.memory import MemorySaver
 
 try:
@@ -100,14 +108,19 @@ class RAGEngine:
         self.index = self.pc.Index(PINECONE_INDEX_NAME)
         self.vectorstore = PineconeVectorStore(embedding=self.embeddings, index=self.index)
 
-        # Initialize FlashRank safely with writable /tmp cache directory for serverless environments
+        # Initialize FlashRank for local/non-serverless environments only.
+        # ONNX Runtime's multiprocessing.SemLock requires /dev/shm which doesn't exist on Vercel/Lambda.
         self.ranker = None
-        try:
-            temp_cache = os.path.join(tempfile.gettempdir(), "flashrank")
-            os.makedirs(temp_cache, exist_ok=True)
-            self.ranker = Ranker(cache_dir=temp_cache)
-        except Exception as e:
-            logger.warning(f"FlashRank initialization skipped on serverless ({e}), will use fused RRF ranker: {e}")
+        if Ranker is not None and not IS_SERVERLESS:
+            try:
+                temp_cache = os.path.join(tempfile.gettempdir(), "flashrank")
+                os.makedirs(temp_cache, exist_ok=True)
+                self.ranker = Ranker(cache_dir=temp_cache)
+                logger.info("FlashRank reranker initialized successfully.")
+            except Exception as e:
+                logger.warning(f"FlashRank initialization skipped ({e}), will use fused RRF ranker.")
+        else:
+            logger.info("FlashRank disabled on serverless environment, using fused RRF ranker.")
 
         # Rephrasing & Query Expansion Prompt
         self.rephrase_prompt = ChatPromptTemplate.from_messages([
