@@ -53,7 +53,7 @@ def create_app() -> FastAPI:
 
     @app.get("/health")
     async def health_check():
-        return {"status": "ok"}
+        return {"status": "ok", "version": "v2-inmemory-parsers"}
 
     # Include all modular sub-routers
     app.include_router(sessions_router)

@@ -165,6 +165,8 @@ async def upload_document(
             "file_url": doc_url
         }
     except Exception as e:
-        logger.error(f"Failed to process uploaded file '{file.filename}' for session {session_id}: {e}", exc_info=True)
+        import traceback
+        tb_str = traceback.format_exc()
+        logger.error(f"Failed to process uploaded file '{file.filename}' for session {session_id}: {e}\n{tb_str}")
         user_error = format_user_facing_error(e, default_prefix="Failed to process uploaded file")
-        raise HTTPException(status_code=500, detail=user_error)
+        raise HTTPException(status_code=500, detail=f"{user_error} | TRACE: {tb_str[-500:]}")
