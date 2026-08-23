@@ -147,7 +147,14 @@ export async function createSession(title: string = "New Chat"): Promise<Session
         headers,
         body: JSON.stringify({ title }),
     });
-    if (!response.ok) throw new Error("Failed to create session");
+    if (!response.ok) {
+        let errDetail = `Failed to create session (${response.status})`;
+        try {
+            const errData = await response.json();
+            errDetail = errData.detail || errDetail;
+        } catch {}
+        throw new Error(errDetail);
+    }
     return response.json();
 }
 
@@ -158,14 +165,28 @@ export async function updateSessionTitle(sessionId: string, title: string): Prom
         headers,
         body: JSON.stringify({ title }),
     });
-    if (!response.ok) throw new Error("Failed to update session title");
+    if (!response.ok) {
+        let errDetail = "Failed to update session title";
+        try {
+            const errData = await response.json();
+            errDetail = errData.detail || errDetail;
+        } catch {}
+        throw new Error(errDetail);
+    }
     return response.json();
 }
 
 export async function getSessions(): Promise<Session[]> {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/sessions`, { headers });
-    if (!response.ok) throw new Error("Failed to fetch sessions");
+    if (!response.ok) {
+        let errDetail = "Failed to fetch sessions";
+        try {
+            const errData = await response.json();
+            errDetail = errData.detail || errDetail;
+        } catch {}
+        throw new Error(errDetail);
+    }
     return response.json();
 }
 

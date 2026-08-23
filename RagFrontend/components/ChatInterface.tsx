@@ -155,22 +155,27 @@ export function ChatInterface({ initialSessionId }: ChatInterfaceProps) {
         setIsUploading(true);
         let sessionId = currentSessionId;
 
-        // Ensure session exists
+        // Ensure session exists (reuse existing empty session if available)
         if (!sessionId) {
-            try {
-                const newSession = await createSession();
-                await mutateSessions();
-                sessionId = newSession.id;
+            const emptySession = sessions?.find(s => !s.file_name);
+            if (emptySession) {
+                sessionId = emptySession.id;
                 setCurrentSessionId(sessionId);
-                window.history.pushState(null, "", `/chat/${newSession.id}`);
-            } catch (error: any) {
-                console.error("Failed to create session for upload:", error);
-                if (error?.message?.includes("Free demo") || error?.message?.includes("402")) {
+                window.history.pushState(null, "", `/chat/${sessionId}`);
+            } else {
+                try {
+                    const newSession = await createSession();
+                    await mutateSessions();
+                    sessionId = newSession.id;
+                    setCurrentSessionId(sessionId);
+                    window.history.pushState(null, "", `/chat/${newSession.id}`);
+                } catch (error: any) {
+                    console.error("Failed to create session for upload:", error);
                     setApiKeyModalReason("limit_reached");
                     setIsApiKeyModalOpen(true);
+                    setIsUploading(false);
+                    return;
                 }
-                setIsUploading(false);
-                return;
             }
         }
 
@@ -229,20 +234,25 @@ export function ChatInterface({ initialSessionId }: ChatInterfaceProps) {
 
         // Create session if none exists
         if (!sessionId) {
-            try {
-                const newSession = await createSession();
-                await mutateSessions();
-                sessionId = newSession.id;
+            const emptySession = sessions?.find(s => !s.file_name);
+            if (emptySession) {
+                sessionId = emptySession.id;
                 setCurrentSessionId(sessionId);
-                window.history.pushState(null, "", `/chat/${newSession.id}`);
-            } catch (error: any) {
-                console.error("Failed to create session:", error);
-                if (error?.message?.includes("Free demo") || error?.message?.includes("402")) {
+                window.history.pushState(null, "", `/chat/${sessionId}`);
+            } else {
+                try {
+                    const newSession = await createSession();
+                    await mutateSessions();
+                    sessionId = newSession.id;
+                    setCurrentSessionId(sessionId);
+                    window.history.pushState(null, "", `/chat/${newSession.id}`);
+                } catch (error: any) {
+                    console.error("Failed to create session:", error);
                     setApiKeyModalReason("limit_reached");
                     setIsApiKeyModalOpen(true);
+                    setIsSending(false);
+                    return;
                 }
-                setIsSending(false);
-                return;
             }
         }
 
