@@ -96,6 +96,10 @@ class RAGEngine:
         except Exception as e:
             logger.warning(f"Could not auto-create index '{PINECONE_INDEX_NAME}': {e}")
 
+        # Connect to index and vectorstore
+        self.index = self.pc.Index(PINECONE_INDEX_NAME)
+        self.vectorstore = PineconeVectorStore(embedding=self.embeddings, index=self.index)
+
         # Initialize FlashRank safely with writable /tmp cache directory for serverless environments
         self.ranker = None
         try:
