@@ -51,6 +51,7 @@ ALLOWED_ORIGINS = [
     for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,https://askdoc.dilip.website,https://www.askdoc.dilip.website,https://askdoc-backend.vercel.app").split(",")
     if origin.strip()
 ]
+
 MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "10"))
 MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 RATE_LIMIT_RPM = int(os.getenv("RATE_LIMIT_RPM", "45"))

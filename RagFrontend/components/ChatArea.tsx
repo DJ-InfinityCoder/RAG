@@ -564,38 +564,12 @@ export function ChatArea({
             </div>
 
             {/* Scroll Area */}
-            <div ref={scrollContainerRef} className={cn("flex-1 overflow-y-auto px-4 sm:px-6 py-6 flex flex-col", !hasDocument && displayMessages.length === 0 && !isUploading && "justify-center items-center")}>
+            <div ref={scrollContainerRef} className={cn("flex-1 overflow-y-auto px-4 sm:px-6 py-6 flex flex-col", !hasDocument && displayMessages.length === 0 && "justify-center items-center")}>
                 {isHistoryLoading ? (
                     <ChatSkeleton />
                 ) : (
                     <div className="flex flex-col gap-5 w-full max-w-4xl mx-auto px-1.5 flex-1">
-                        {/* Active Uploading / Indexing State */}
-                        {isUploading && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 10 }} 
-                                animate={{ opacity: 1, y: 0 }} 
-                                className="w-full p-4.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--accent-color)]/50 shadow-md flex items-center gap-4 font-sans mb-3"
-                            >
-                                <div className="w-10 h-10 rounded-xl bg-[var(--accent-color)]/15 text-[var(--accent-color)] flex items-center justify-center shrink-0">
-                                    <Loader2 className="w-5 h-5 text-[var(--accent-color)] animate-spin" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <p className="text-sm font-bold text-[var(--text-main)] truncate">
-                                            Indexing & Uploading {uploadingFileName ? `"${uploadingFileName}"` : "document"}...
-                                        </p>
-                                        <span className="px-2 py-0.5 rounded-full bg-[var(--accent-color)]/10 text-[var(--accent-color)] text-[10px] font-bold animate-pulse shrink-0">
-                                            Processing
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                                        Parsing document structure, extracting text chunks, and generating vector embeddings in Pinecone.
-                                    </p>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Pinned Top Document Header Banner */}
+                        {/* Pinned Top Document Header Banner (shown once upload is complete) */}
                         {hasDocument && !isUploading && (
                             <motion.div 
                                 initial={{ opacity: 0, y: -6 }} 
