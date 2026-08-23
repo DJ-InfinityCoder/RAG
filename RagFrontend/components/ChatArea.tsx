@@ -30,12 +30,6 @@ interface ChatAreaProps {
     onSendMessage?: (message: string, files: File[]) => void;
 }
 
-const SUGGESTION_CARDS = [
-    { title: "Summarize Key Points", prompt: "What are the core conclusions and takeaways in this document?", icon: Sparkles, color: "text-amber-500", bg: "bg-amber-500/10" },
-    { title: "Find Financial Metrics", prompt: "Extract Q3 revenue numbers, profit margins, and key financial growth metrics.", icon: BarChart2, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { title: "Extract Milestones & Dates", prompt: "List all key deadlines, deliverables, and upcoming project milestones.", icon: Zap, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { title: "Compare Terms & Clauses", prompt: "Highlight key differences between standard terms and this contract agreement.", icon: FileText, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-];
 
 const STATUS_MAP: Record<string, string> = {
     "classify_intent": "Analyzing query intent...",
@@ -613,61 +607,52 @@ export function ChatArea({
                         {/* Empty State when NO document and NO messages */}
                         {!hasDocument && displayMessages.length === 0 && !isLoading ? (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
-                                className="flex flex-col items-center text-center space-y-8 max-w-2xl w-full mx-auto my-auto">
-                                <div className="flex flex-col items-center gap-4">
-                                    <div className="space-y-2">
-                                        <h1 className="text-3xl md:text-4xl font-serif font-bold text-[var(--text-main)] tracking-tight leading-tight">What&apos;s in your documents?</h1>
-                                        <p className="text-sm text-[var(--text-muted)] font-serif max-w-md mx-auto leading-relaxed">Upload your PDFs, contracts, or reports and ask anything — get cited, accurate answers instantly.</p>
-                                    </div>
+                                className="flex flex-col items-center text-center space-y-4 max-w-xl w-full mx-auto my-auto py-8">
+                                <div className="w-14 h-14 rounded-2xl bg-[var(--accent-color)]/10 text-[var(--accent-color)] flex items-center justify-center mb-2 shadow-sm border border-[var(--accent-color)]/20">
+                                    <FileText className="w-7 h-7" />
                                 </div>
-                                <motion.div initial="hidden" animate="visible" variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.05 } } }} className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full text-left">
-                                    {SUGGESTION_CARDS.map((card, index) => {
-                                        const IconComponent = card.icon;
-                                        return (
-                                            <motion.button key={index} variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.2 } } }}
-                                                onClick={() => handleSuggestionClick(card.prompt)}
-                                                className="group p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]/60 hover:border-[var(--accent-color)]/40 hover:shadow-md transition-all text-left cursor-pointer"
-                                                whileTap={{ scale: 0.98 }}>
-                                                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mb-3", card.bg)}>
-                                                    <IconComponent className={cn("w-4 h-4", card.color)} />
-                                                </div>
-                                                <p className="text-xs font-bold text-[var(--text-main)] mb-1">{card.title}</p>
-                                                <p className="text-xs text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors font-serif leading-relaxed line-clamp-2">&ldquo;{card.prompt}&rdquo;</p>
-                                            </motion.button>
-                                        );
-                                    })}
-                                </motion.div>
-                            </motion.div>
-                        ) : hasDocument && userMessages.length === 0 && !isLoading ? (
-                            /* Document-Ready Prompt Suggestions when document is loaded but no questions asked yet */
-                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center text-center space-y-6 max-w-2xl w-full mx-auto my-auto">
-                                <div className="space-y-1.5">
-                                    <h2 className="text-2xl font-serif font-bold text-[var(--text-main)]">
-                                        Ask anything about this document
-                                    </h2>
-                                    <p className="text-xs sm:text-sm text-[var(--text-muted)] font-serif max-w-md mx-auto">
-                                        Select a suggested question below or type your custom prompt in the input box.
+                                <div className="space-y-2">
+                                    <h1 className="text-2xl md:text-3xl font-serif font-bold text-[var(--text-main)] tracking-tight leading-tight">
+                                        Ask anything from your documents
+                                    </h1>
+                                    <p className="text-xs sm:text-sm text-[var(--text-muted)] font-serif max-w-md mx-auto leading-relaxed">
+                                        Upload a PDF, DOCX, XLSX, PPTX, CSV, or text file to extract verified, cited answers strictly grounded in your content.
                                     </p>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full text-left">
-                                    {SUGGESTION_CARDS.map((card, index) => {
-                                        const IconComponent = card.icon;
-                                        return (
-                                            <button
-                                                key={index}
-                                                onClick={() => handleSuggestionClick(card.prompt)}
-                                                className="group p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]/70 hover:border-[var(--accent-color)]/40 hover:shadow-sm transition-all text-left cursor-pointer"
-                                            >
-                                                <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center mb-2.5", card.bg)}>
-                                                    <IconComponent className={cn("w-3.5 h-3.5", card.color)} />
-                                                </div>
-                                                <p className="text-xs font-bold text-[var(--text-main)] mb-0.5">{card.title}</p>
-                                                <p className="text-[11px] text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors font-serif leading-relaxed line-clamp-2">
-                                                    &ldquo;{card.prompt}&rdquo;
-                                                </p>
-                                            </button>
-                                        );
-                                    })}
+                            </motion.div>
+                        ) : hasDocument && userMessages.length === 0 && !isLoading ? (
+                            /* Document-Ready state: Focused purely on the uploaded document */
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center text-center space-y-5 max-w-xl w-full mx-auto my-auto py-8">
+                                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs border border-emerald-500/20">
+                                    <Check className="w-6 h-6 stroke-[2.5]" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <h2 className="text-xl sm:text-2xl font-serif font-bold text-[var(--text-main)]">
+                                        {sessionDocument?.file_name ? cleanSourceTitle(sessionDocument.file_name) : "Document Ready"}
+                                    </h2>
+                                    <p className="text-xs sm:text-sm text-[var(--text-muted)] font-serif max-w-md mx-auto">
+                                        Ask any question below to extract facts, tables, and cited answers from this document.
+                                    </p>
+                                </div>
+                                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                                    <button
+                                        onClick={() => handleSuggestionClick("Summarize the main contents and key facts from this document.")}
+                                        className="px-3.5 py-1.5 rounded-full bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] border border-[var(--border-color)]/70 hover:border-[var(--accent-color)]/40 text-xs font-medium text-[var(--text-main)] transition-all cursor-pointer shadow-2xs"
+                                    >
+                                        Summarize document
+                                    </button>
+                                    <button
+                                        onClick={() => handleSuggestionClick("What are the key points and takeaways in this document?")}
+                                        className="px-3.5 py-1.5 rounded-full bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] border border-[var(--border-color)]/70 hover:border-[var(--accent-color)]/40 text-xs font-medium text-[var(--text-main)] transition-all cursor-pointer shadow-2xs"
+                                    >
+                                        Key takeaways
+                                    </button>
+                                    <button
+                                        onClick={() => handleSuggestionClick("List all structured data, figures, and important details mentioned in this document.")}
+                                        className="px-3.5 py-1.5 rounded-full bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] border border-[var(--border-color)]/70 hover:border-[var(--accent-color)]/40 text-xs font-medium text-[var(--text-main)] transition-all cursor-pointer shadow-2xs"
+                                    >
+                                        Extract key data
+                                    </button>
                                 </div>
                             </motion.div>
                         ) : (
