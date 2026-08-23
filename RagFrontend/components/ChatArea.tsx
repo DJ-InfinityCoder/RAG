@@ -1014,8 +1014,36 @@ export function ChatArea({
                             </>
                         )}
 
-                        {/* Streaming indicator (only shown before first token) */}
-                        {isLoading && (messages.length === 0 || messages[messages.length - 1]?.role === "user" || messages[messages.length - 1]?.content === "") && (
+                        {/* Dedicated Document Upload & Indexing Banner in Chat Area */}
+                        {isUploading && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 8 }} 
+                                animate={{ opacity: 1, y: 0 }} 
+                                className="w-full p-3.5 sm:p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--accent-color)]/40 shadow-xs flex items-center justify-between gap-3 font-sans shrink-0"
+                            >
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-9 h-9 rounded-xl bg-[var(--accent-color)]/15 text-[var(--accent-color)] flex items-center justify-center shrink-0">
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-xs sm:text-sm font-bold text-[var(--text-main)] truncate max-w-xs sm:max-w-md">
+                                                {uploadingFileName || "Uploading Document..."}
+                                            </p>
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--accent-color)]/10 text-[var(--accent-color)] text-[10px] font-semibold border border-[var(--accent-color)]/20 shrink-0">
+                                                Indexing
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                                            {statusLabel || "Parsing layout, extracting text & generating embeddings..."}
+                                        </p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Streaming indicator (only shown during active AI response generation) */}
+                        {isLoading && !isUploading && (messages.length === 0 || messages[messages.length - 1]?.role === "user" || messages[messages.length - 1]?.content === "") && (
                             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
                                 <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl rounded-tl-sm bg-[var(--bg-card)] border border-[var(--border-color)]/60 text-xs shadow-sm">
                                     <div className="flex gap-1">

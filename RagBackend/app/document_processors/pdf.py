@@ -1,6 +1,6 @@
 """
 In-memory PDF extraction with pdfplumber (table detection) and pypdf fallback.
-Zero disk I/O, zero external binary dependencies.
+Zero disk I/O, zero external binary dependencies, 100% serverless safe.
 """
 
 import io
@@ -17,7 +17,10 @@ def extract_pdf_fallback(source: Union[str, bytes], filename: str) -> List[Docum
     """Pure-Python pypdf fallback with zero external dependencies."""
     try:
         import pypdf
-        stream = io.BytesIO(source) if isinstance(source, bytes) else source
+        raw_bytes = source if isinstance(source, bytes) else source.encode('utf-8') if isinstance(source, str) else b""
+        if not raw_bytes:
+            return []
+        stream = io.BytesIO(raw_bytes)
         reader = pypdf.PdfReader(stream)
         documents = []
         for page_idx, page in enumerate(reader.pages):
@@ -32,9 +35,10 @@ def extract_pdf_fallback(source: Union[str, bytes], filename: str) -> List[Docum
                         "page_number": page_idx + 1
                     }
                 ))
+        logger.info(f"pypdf successfully extracted {len(documents)} pages from '{filename}'")
         return documents
     except Exception as e:
-        logger.error(f"Fallback pypdf extraction failed for {filename}: {e}")
+        logger.error(f"Fallback pypdf extraction failed for {filename}: {e}", exc_info=True)
         return []
 
 
@@ -43,21 +47,36 @@ def extract_pdf_pages_with_tables(source: Union[str, bytes], filename: str) -> L
     Extracts text and structured Markdown tables from PDF pages in-memory:
     1. Detects and inlines tables in structured Markdown format.
     2. Detects repeated headers/footers (>50% pages) and strips them.
-    3. Seamlessly falls back to pure-Python pypdf if needed.
+    3. Seamlessly falls back to pure-Python pypdf if pdfplumber encounters any issues.
     """
+    raw_bytes = source if isinstance(source, bytes) else source.encode('utf-8') if isinstance(source, str) else b""
+    if not raw_bytes:
+        return []
+
     raw_pages_data = []
+    total_pages = 0
 
     try:
         import pdfplumber
-        stream = io.BytesIO(source) if isinstance(source, bytes) else source
-        with pdfplumber.open(stream) as pdf:
+        with pdfplumber.open(io.BytesIO(raw_bytes)) as pdf:
             total_pages = len(pdf.pages)
             for page_idx, page in enumerate(pdf.pages):
                 page_num = page_idx + 1
-                tables = page.find_tables()
-                table_bboxes = [t.bbox for t in tables] if tables else []
-                extracted_tables = [t.extract() for t in tables] if tables else []
-                page_text = page.extract_text(layout=False) or ""
+                tables = []
+                table_bboxes = []
+                extracted_tables = []
+                try:
+                    tables = page.find_tables() or []
+                    table_bboxes = [t.bbox for t in tables] if tables else []
+                    extracted_tables = [t.extract() for t in tables] if tables else []
+                except Exception as tbl_err:
+                    logger.debug(f"Table detection skipped on page {page_num} of {filename}: {tbl_err}")
+
+                page_text = ""
+                try:
+                    page_text = page.extract_text(layout=False) or ""
+                except Exception as txt_err:
+                    logger.debug(f"Text extraction notice on page {page_num} of {filename}: {txt_err}")
 
                 if tables and extracted_tables:
                     md_tables = []
@@ -84,16 +103,17 @@ def extract_pdf_pages_with_tables(source: Union[str, bytes], filename: str) -> L
                 else:
                     combined_content = page_text
 
-                raw_pages_data.append({
-                    "page_num": page_num,
-                    "content": combined_content
-                })
+                if combined_content.strip():
+                    raw_pages_data.append({
+                        "page_num": page_num,
+                        "content": combined_content
+                    })
     except Exception as pdf_err:
-        logger.warning(f"pdfplumber extraction error ({pdf_err}), falling back to pypdf")
-        return extract_pdf_fallback(source, filename)
+        logger.warning(f"pdfplumber extraction error on '{filename}' ({pdf_err}), falling back to pypdf")
+        return extract_pdf_fallback(raw_bytes, filename)
 
     if not raw_pages_data:
-        return extract_pdf_fallback(source, filename)
+        return extract_pdf_fallback(raw_bytes, filename)
 
     # Strip repeated headers/footers (>50% of pages)
     if total_pages > 2:
@@ -136,4 +156,5 @@ def extract_pdf_pages_with_tables(source: Union[str, bytes], filename: str) -> L
                 }
             ))
 
-    return documents
+    return documents if documents else extract_pdf_fallback(raw_bytes, filename)
+

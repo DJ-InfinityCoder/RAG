@@ -385,7 +385,8 @@ export function ChatInterface({ initialSessionId }: ChatInterfaceProps) {
             <main className="flex-1 flex flex-col h-full min-w-0 bg-[var(--bg-main)] relative">
                 <ChatArea
                     messages={messages || []}
-                    isLoading={isSending || (isMessagesLoading && !!currentSessionId)}
+                    isLoading={isSending}
+                    isHistoryLoading={isMessagesLoading && !messages && !!currentSessionId}
                     isUploading={isUploading}
                     uploadingFileName={uploadingFileName}
                     sessionTitle={currentSession?.title}
