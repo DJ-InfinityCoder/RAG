@@ -96,12 +96,14 @@ class RAGEngine:
         except Exception as e:
             logger.warning(f"Could not auto-create index '{PINECONE_INDEX_NAME}': {e}")
 
-        # Connect to index
-        self.index = self.pc.Index(PINECONE_INDEX_NAME)
-        self.vectorstore = PineconeVectorStore(embedding=self.embeddings, index=self.index)
-        
-        # Initialize FlashRank
-        self.ranker = Ranker()
+        # Initialize FlashRank safely with writable /tmp cache directory for serverless environments
+        self.ranker = None
+        try:
+            temp_cache = os.path.join(tempfile.gettempdir(), "flashrank")
+            os.makedirs(temp_cache, exist_ok=True)
+            self.ranker = Ranker(cache_dir=temp_cache)
+        except Exception as e:
+            logger.warning(f"FlashRank initialization skipped on serverless ({e}), will use fused RRF ranker: {e}")
 
         # Rephrasing & Query Expansion Prompt
         self.rephrase_prompt = ChatPromptTemplate.from_messages([

@@ -181,7 +181,7 @@ def create_node_rerank(engine: "RAGEngine"):
         ]
         
         reranked_docs = []
-        if passages:
+        if passages and getattr(engine, "ranker", None) is not None:
             try:
                 rerank_request = RerankRequest(query=search_query, passages=passages)
                 results = engine.ranker.rerank(rerank_request)
