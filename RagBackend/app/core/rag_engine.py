@@ -6,6 +6,7 @@ Manages LLM, vectorstore, checkpointer, graph, and file processing dispatch.
 import os
 import time
 import json
+import uuid
 import asyncio
 import tempfile
 from typing import List, Optional, Dict, Any
