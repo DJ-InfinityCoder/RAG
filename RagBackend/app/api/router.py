@@ -30,7 +30,10 @@ def init_db():
 
 def create_app() -> FastAPI:
     """FastAPI application factory."""
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        logger.warning(f"Database init warning on startup: {e}")
 
     app = FastAPI(title="AskDoc API")
 
