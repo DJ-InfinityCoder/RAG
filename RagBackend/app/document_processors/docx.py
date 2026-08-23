@@ -1,10 +1,11 @@
 """
-DOCX extraction with heading hierarchy and inline table support.
+In-memory DOCX extraction with heading hierarchy and inline table support.
+Zero disk I/O, zero external binary dependencies.
 """
 
-from typing import List
+import io
+from typing import List, Union
 from langchain_core.documents import Document
-from langchain_community.document_loaders import Docx2txtLoader
 
 from app.config import get_logger
 from app.document_processors.base import format_table_as_markdown
@@ -12,33 +13,31 @@ from app.document_processors.base import format_table_as_markdown
 logger = get_logger("askdoc.processors.docx")
 
 
-def extract_docx_with_structure(docx_path: str, filename: str) -> List[Document]:
+def extract_docx_with_structure(source: Union[str, bytes], filename: str) -> List[Document]:
     """
-    Walks a DOCX document in sequential element order (paragraphs + tables):
+    Walks a DOCX document in sequential element order in-memory:
     1. Converts Heading 1/2/3 styles to Markdown # / ## / ### headers inline.
     2. Converts tables to inlined Markdown tables in their exact document position.
-    3. Tracks a running heading_path stack (e.g. 'Introduction > Background')
-       and attaches it to section Documents before chunking.
+    3. Tracks a running heading_path stack and attaches it to section Documents.
     """
     try:
         import docx
         from docx.text.paragraph import Paragraph as DocxParagraph
         from docx.table import Table as DocxTable
     except ImportError:
-        logger.warning("python-docx not available, falling back to Docx2txtLoader")
-        loader = Docx2txtLoader(docx_path)
-        return loader.load()
+        logger.error("python-docx not available")
+        return []
 
     try:
-        doc = docx.Document(docx_path)
+        stream = io.BytesIO(source) if isinstance(source, bytes) else source
+        doc = docx.Document(stream)
     except Exception as e:
-        logger.warning(f"Error opening docx with python-docx ({e}), falling back to Docx2txtLoader")
-        loader = Docx2txtLoader(docx_path)
-        return loader.load()
+        logger.error(f"Error opening docx in-memory: {e}")
+        return []
 
     documents = []
     current_section_lines = []
-    heading_stack = []  # [(level, title)] e.g. [(1, "Introduction"), (2, "Background")]
+    heading_stack = []
 
     def get_heading_path():
         return " > ".join([title for _, title in heading_stack]) if heading_stack else ""
@@ -108,7 +107,6 @@ def extract_docx_with_structure(docx_path: str, filename: str) -> List[Document]
     flush_section()
 
     if not documents:
-        # Fallback if whole doc had no structured headings
         full_text = "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
         if full_text.strip():
             documents.append(Document(

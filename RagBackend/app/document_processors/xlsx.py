@@ -1,8 +1,5 @@
-"""
-XLSX extraction: format-preserving, multi-row headers, wide/large sheet handling.
-"""
-
-from typing import List, Any
+import io
+from typing import List, Union, Any
 import pandas as pd
 from langchain_core.documents import Document
 
@@ -11,20 +8,23 @@ from app.config import get_logger
 logger = get_logger("askdoc.processors.xlsx")
 
 
-def extract_xlsx_sheets(xlsx_path: str, filename: str) -> List[Document]:
+def extract_xlsx_sheets(source: Union[str, bytes], filename: str) -> List[Document]:
     """
-    Advanced structure-preserving XLSX parser:
+    Advanced structure-preserving XLSX parser in-memory:
     1. Preserves cell display formatting (currencies, percentages, thousands separators).
-    2. Detects multi-row headers (e.g. Row 1 Category + Row 2 Metric) and combines them into compound headers.
+    2. Detects multi-row headers and combines them into compound headers.
     3. Handles wide sheets (> 15 columns) by partitioning or noting truncation.
     4. Handles large sheets (> 500 rows) by batching 5-10 rows per chunk.
     5. Prepends sheet_name and column context to all chunks.
     """
+    stream = io.BytesIO(source) if isinstance(source, bytes) else source
     try:
         import openpyxl
+        wb = openpyxl.load_workbook(stream, data_only=True)
     except ImportError:
         logger.warning("openpyxl not available, falling back to pandas excel parser")
-        excel_sheets = pd.read_excel(xlsx_path, sheet_name=None)
+        stream.seek(0) if hasattr(stream, "seek") else None
+        excel_sheets = pd.read_excel(stream, sheet_name=None)
         documents = []
         for sheet_name, df in excel_sheets.items():
             if df.empty:
@@ -35,9 +35,6 @@ def extract_xlsx_sheets(xlsx_path: str, filename: str) -> List[Document]:
                 content = f"File: {filename} | Sheet: {sheet_name}\nColumns: {col_names}\nRow Data:\n{row_str}"
                 documents.append(Document(page_content=content, metadata={"source": filename, "sheet": sheet_name, "row": idx}))
         return documents
-
-    try:
-        wb = openpyxl.load_workbook(xlsx_path, data_only=True)
     except Exception as e:
         logger.error(f"Error opening XLSX file {filename}: {e}", exc_info=True)
         return []

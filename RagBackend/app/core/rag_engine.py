@@ -563,32 +563,23 @@ Context:
         return len(docs)
 
     def process_file(self, file_content: bytes, filename: str, session_id: str = None, user_id: str = None):
-        # Create a temp file to save the uploaded content
-        suffix = os.path.splitext(filename)[1]
-        temp_dir = tempfile.gettempdir()
-        temp_filename = f"upload_{uuid.uuid4().hex}{suffix}"
-        tmp_path = os.path.join(temp_dir, temp_filename)
-        with open(tmp_path, "wb") as f:
-            f.write(file_content)
-
         try:
             documents = []
             filename_lower = filename.lower()
             
             if filename_lower.endswith(".pdf"):
-                documents = extract_pdf_pages_with_tables(tmp_path, filename)
+                documents = extract_pdf_pages_with_tables(file_content, filename)
             elif filename_lower.endswith(".docx"):
-                documents = extract_docx_with_structure(tmp_path, filename)
+                documents = extract_docx_with_structure(file_content, filename)
             elif filename_lower.endswith(".pptx"):
-                documents = extract_pptx_slides(tmp_path, filename)
+                documents = extract_pptx_slides(file_content, filename)
             elif filename_lower.endswith(".txt"):
-                with open(tmp_path, 'r', encoding='utf-8') as f:
-                    text = f.read()
-                documents = [Document(page_content=text, metadata={"source": filename})]
+                text = file_content.decode('utf-8', errors='replace')
+                documents = [Document(page_content=text, metadata={"source": filename, "title": filename})]
             elif filename_lower.endswith(".xlsx"):
-                documents = extract_xlsx_sheets(tmp_path, filename)
+                documents = extract_xlsx_sheets(file_content, filename)
             elif filename_lower.endswith(".csv"):
-                documents = extract_csv_data(tmp_path, filename)
+                documents = extract_csv_data(file_content, filename)
             
             if documents:
                 # Deduplicate previous chunks for this file in this session
@@ -620,9 +611,6 @@ Context:
         except Exception as e:
             logger.error(f"Error processing file {filename}: {e}", exc_info=True)
             raise e
-        finally:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
 
     # ─── Evaluation ───────────────────────────────────────────────────────────
 

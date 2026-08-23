@@ -1,8 +1,5 @@
-"""
-PPTX extraction: slide-by-slide with titles, tables, and speaker notes.
-"""
-
-from typing import List
+import io
+from typing import List, Union
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -17,9 +14,9 @@ except ImportError:
     Presentation = None
 
 
-def extract_pptx_slides(pptx_path: str, filename: str, chunk_size: int = 1800, chunk_overlap: int = 300) -> List[Document]:
+def extract_pptx_slides(source: Union[str, bytes], filename: str, chunk_size: int = 1800, chunk_overlap: int = 300) -> List[Document]:
     """
-    Extracts PPTX content slide-by-slide preserving structure:
+    Extracts PPTX content slide-by-slide preserving structure in-memory:
     1. Extracts slide title, body shapes, and inlined table shapes (via shape.has_table).
     2. Appends speaker notes from slide.notes_slide if present.
     3. Prepends clear slide weighting (e.g. 'Slide {slide_num}: {title}').
@@ -31,7 +28,8 @@ def extract_pptx_slides(pptx_path: str, filename: str, chunk_size: int = 1800, c
         return []
 
     try:
-        prs = Presentation(pptx_path)
+        stream = io.BytesIO(source) if isinstance(source, bytes) else source
+        prs = Presentation(stream)
     except Exception as e:
         logger.error(f"Error opening PPTX file {filename}: {e}", exc_info=True)
         return []

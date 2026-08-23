@@ -1,10 +1,6 @@
-"""
-CSV extraction: format-preserving, multi-row headers, wide/large dataset handling.
-Named csv_parser.py to avoid shadowing Python's built-in csv module.
-"""
-
+import io
 import csv
-from typing import List
+from typing import List, Union
 from langchain_core.documents import Document
 
 from app.config import get_logger
@@ -12,25 +8,31 @@ from app.config import get_logger
 logger = get_logger("askdoc.processors.csv")
 
 
-def extract_csv_data(csv_path: str, filename: str) -> List[Document]:
+def extract_csv_data(source: Union[str, bytes], filename: str) -> List[Document]:
     """
-    Advanced structure-preserving CSV parser:
+    Advanced structure-preserving CSV parser in-memory:
     1. Preserves original string formatting (currencies, percentages, codes with leading zeros).
-    2. Detects multi-row headers (e.g. Row 1 Category + Row 2 Metric) and combines them into compound headers.
+    2. Detects multi-row headers and combines them into compound headers.
     3. Handles wide tables (> 15 columns) by noting truncation in metadata.
     4. Handles large datasets (> 500 rows) by batching 5-10 rows per chunk.
     5. Prepends filename and column context to all chunks.
     """
     raw_rows = []
+    
     # Try multiple standard encodings
     for enc in ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']:
         try:
-            with open(csv_path, 'r', encoding=enc, errors='replace') as f:
-                reader = csv.reader(f)
-                for row in reader:
-                    cleaned_row = [str(c).strip() for c in row]
-                    if any(c != "" for c in cleaned_row):
-                        raw_rows.append(cleaned_row)
+            if isinstance(source, bytes):
+                text_content = source.decode(enc, errors='replace')
+                reader = csv.reader(io.StringIO(text_content))
+            else:
+                with open(source, 'r', encoding=enc, errors='replace') as f:
+                    reader = csv.reader(f)
+                    
+            for row in reader:
+                cleaned_row = [str(c).strip() for c in row]
+                if any(c != "" for c in cleaned_row):
+                    raw_rows.append(cleaned_row)
             if raw_rows:
                 break
         except Exception:
