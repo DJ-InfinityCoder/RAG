@@ -17,27 +17,19 @@ def extract_xlsx_sheets(source: Union[str, bytes], filename: str) -> List[Docume
     4. Handles large sheets (> 500 rows) by batching 5-10 rows per chunk.
     5. Prepends sheet_name and column context to all chunks.
     """
-    stream = io.BytesIO(source) if isinstance(source, bytes) else source
+    raw_bytes = source if isinstance(source, bytes) else source.encode('utf-8') if isinstance(source, str) else b""
+    if not raw_bytes:
+        return []
+
     try:
         import openpyxl
-        wb = openpyxl.load_workbook(stream, data_only=True)
+        wb = openpyxl.load_workbook(io.BytesIO(raw_bytes), data_only=True)
     except ImportError:
         logger.warning("openpyxl not available, falling back to pandas excel parser")
-        stream.seek(0) if hasattr(stream, "seek") else None
-        excel_sheets = pd.read_excel(stream, sheet_name=None)
-        documents = []
-        for sheet_name, df in excel_sheets.items():
-            if df.empty:
-                continue
-            col_names = ", ".join([str(c) for c in df.columns])
-            for idx, row in df.iterrows():
-                row_str = "\n".join([f"{col}: {val}" for col, val in row.items() if pd.notna(val)])
-                content = f"File: {filename} | Sheet: {sheet_name}\nColumns: {col_names}\nRow Data:\n{row_str}"
-                documents.append(Document(page_content=content, metadata={"source": filename, "sheet": sheet_name, "row": idx}))
-        return documents
+        return _fallback_xlsx(raw_bytes, filename)
     except Exception as e:
-        logger.error(f"Error opening XLSX file {filename}: {e}", exc_info=True)
-        return []
+        logger.warning(f"openpyxl failed for {filename} ({e}), falling back to pandas")
+        return _fallback_xlsx(raw_bytes, filename)
 
     documents = []
 
@@ -171,11 +163,34 @@ def extract_xlsx_sheets(source: Union[str, bytes], filename: str) -> List[Docume
                             "source": filename,
                             "title": filename,
                             "sheet": sheet_name,
-                            "sheet_name": sheet_name,
                             "row": row_num,
                             "total_rows": total_rows,
                             "is_truncated": is_truncated
                         }
                     ))
 
-    return documents
+    return documents if documents else _fallback_xlsx(raw_bytes, filename)
+
+
+def _fallback_xlsx(raw_bytes: bytes, filename: str) -> List[Document]:
+    """Pure in-memory pandas Excel fallback extraction."""
+    try:
+        excel_sheets = pd.read_excel(io.BytesIO(raw_bytes), sheet_name=None)
+        documents = []
+        for sheet_name, df in excel_sheets.items():
+            if df.empty:
+                continue
+            col_names = ", ".join([str(c) for c in df.columns])
+            for idx, row in df.iterrows():
+                row_str = "\n".join([f"{col}: {val}" for col, val in row.items() if pd.notna(val)])
+                if row_str.strip():
+                    content = f"File: {filename} | Sheet: {sheet_name}\nColumns: {col_names}\nRow Data:\n{row_str}"
+                    documents.append(Document(
+                        page_content=content,
+                        metadata={"source": filename, "title": filename, "sheet": sheet_name, "row": idx + 1}
+                    ))
+        return documents
+    except Exception as e:
+        logger.error(f"Pandas XLSX fallback failed for {filename}: {e}")
+    return []
+

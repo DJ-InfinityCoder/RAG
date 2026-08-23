@@ -17,18 +17,17 @@ def extract_csv_data(source: Union[str, bytes], filename: str) -> List[Document]
     4. Handles large datasets (> 500 rows) by batching 5-10 rows per chunk.
     5. Prepends filename and column context to all chunks.
     """
+    raw_bytes = source if isinstance(source, bytes) else source.encode('utf-8') if isinstance(source, str) else b""
+    if not raw_bytes:
+        return []
+
     raw_rows = []
     
-    # Try multiple standard encodings
+    # Try multiple standard encodings in-memory
     for enc in ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']:
         try:
-            if isinstance(source, bytes):
-                text_content = source.decode(enc, errors='replace')
-                reader = csv.reader(io.StringIO(text_content))
-            else:
-                with open(source, 'r', encoding=enc, errors='replace') as f:
-                    reader = csv.reader(f)
-                    
+            text_content = raw_bytes.decode(enc, errors='replace')
+            reader = csv.reader(io.StringIO(text_content))
             for row in reader:
                 cleaned_row = [str(c).strip() for c in row]
                 if any(c != "" for c in cleaned_row):

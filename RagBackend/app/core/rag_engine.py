@@ -3,6 +3,7 @@ RAGEngine: core orchestrator for the AskDoc RAG pipeline.
 Manages LLM, vectorstore, checkpointer, graph, and file processing dispatch.
 """
 
+import app.serverless_compat
 import os
 import time
 import json

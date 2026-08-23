@@ -19,21 +19,25 @@ def extract_docx_with_structure(source: Union[str, bytes], filename: str) -> Lis
     1. Converts Heading 1/2/3 styles to Markdown # / ## / ### headers inline.
     2. Converts tables to inlined Markdown tables in their exact document position.
     3. Tracks a running heading_path stack and attaches it to section Documents.
+    4. Falls back gracefully to docx2txt in-memory if needed.
     """
+    raw_bytes = source if isinstance(source, bytes) else source.encode('utf-8') if isinstance(source, str) else b""
+    if not raw_bytes:
+        return []
+
     try:
         import docx
         from docx.text.paragraph import Paragraph as DocxParagraph
         from docx.table import Table as DocxTable
     except ImportError:
-        logger.error("python-docx not available")
-        return []
+        logger.warning("python-docx not available, attempting fallback")
+        return _fallback_docx(raw_bytes, filename)
 
     try:
-        stream = io.BytesIO(source) if isinstance(source, bytes) else source
-        doc = docx.Document(stream)
+        doc = docx.Document(io.BytesIO(raw_bytes))
     except Exception as e:
-        logger.error(f"Error opening docx in-memory: {e}")
-        return []
+        logger.warning(f"Error opening docx in-memory ({e}), attempting fallback")
+        return _fallback_docx(raw_bytes, filename)
 
     documents = []
     current_section_lines = []
@@ -114,4 +118,20 @@ def extract_docx_with_structure(source: Union[str, bytes], filename: str) -> Lis
                 metadata={"source": filename, "title": filename, "heading_path": "", "section": ""}
             ))
 
-    return documents
+    return documents if documents else _fallback_docx(raw_bytes, filename)
+
+
+def _fallback_docx(raw_bytes: bytes, filename: str) -> List[Document]:
+    """Pure-Python docx2txt fallback extraction in-memory."""
+    try:
+        import docx2txt
+        text = docx2txt.process(io.BytesIO(raw_bytes)) or ""
+        if text.strip():
+            return [Document(
+                page_content=text.strip(),
+                metadata={"source": filename, "title": filename, "heading_path": "", "section": ""}
+            )]
+    except Exception as e:
+        logger.error(f"docx2txt fallback failed for {filename}: {e}")
+    return []
+

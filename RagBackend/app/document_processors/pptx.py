@@ -23,13 +23,16 @@ def extract_pptx_slides(source: Union[str, bytes], filename: str, chunk_size: in
     4. Creates 1 chunk per slide by default, only splitting if content exceeds chunk_size.
     5. Attaches slide_number, page, and has_notes metadata.
     """
+    raw_bytes = source if isinstance(source, bytes) else source.encode('utf-8') if isinstance(source, str) else b""
+    if not raw_bytes:
+        return []
+
     if not Presentation:
         logger.warning("python-pptx not available, cannot parse PPTX")
         return []
 
     try:
-        stream = io.BytesIO(source) if isinstance(source, bytes) else source
-        prs = Presentation(stream)
+        prs = Presentation(io.BytesIO(raw_bytes))
     except Exception as e:
         logger.error(f"Error opening PPTX file {filename}: {e}", exc_info=True)
         return []
