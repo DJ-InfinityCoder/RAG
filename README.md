@@ -213,7 +213,7 @@ Located in `RagBackend/app/api/evaluations.py` and `RagFrontend/app/evaluation/p
 Every query traces through the following distinct steps in the LangSmith dashboard:
 - `classify_intent`: Direct small talk vs document retrieval classification.
 - `rephrase_query`: Condenses multi-turn conversation context into an standalone search query.
-- `retrieve`: Hybrid Pinecone vector + Supabase Postgres full-text BM25 search.
+- `retrieve`: Hybrid Pinecone vector + Supabase Postgres full-text (FTS) search.
 - `rerank`: FlashRank reranking over fused context documents.
 - `grade_retrieval`: Assesses relevance of retrieved context and decides whether to trigger retry.
 - `rewrite_query`: Automatic query optimization on low-confidence retrieval.

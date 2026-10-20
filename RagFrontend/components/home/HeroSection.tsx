@@ -7,7 +7,7 @@ import { ArrowRight, Github, FileText, Sparkles, Database, ShieldCheck } from "l
 
 const vectorNodes = [
     { cx: 150, cy: 120, r: 4, label: "Vector Node [0.84, 0.12]" },
-    { cx: 350, cy: 80, r: 5, label: "Sparse BM25 Keyword" },
+    { cx: 350, cy: 80, r: 5, label: "Postgres FTS Keyword" },
     { cx: 580, cy: 150, r: 4, label: "FlashRank Scored" },
     { cx: 750, cy: 100, r: 6, label: "Dense Embedding" },
     { cx: 900, cy: 220, r: 4, label: "Chunk Context" },

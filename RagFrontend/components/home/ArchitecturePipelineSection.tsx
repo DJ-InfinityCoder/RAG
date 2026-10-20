@@ -7,7 +7,7 @@ import { User, Cpu, Database, Zap, Sparkles } from "lucide-react";
 const pipelineNodes = [
     { name: "User Query", sub: "FastAPI Route", icon: User },
     { name: "Intent Classifier", sub: "LangGraph Node", icon: Cpu },
-    { name: "Pinecone + BM25", sub: "Reciprocal Rank Fusion", icon: Database },
+    { name: "Pinecone + Postgres FTS", sub: "Reciprocal Rank Fusion", icon: Database },
     { name: "FlashRank Reranker", sub: "Top Candidate Scoring", icon: Zap },
     { name: "Gemini LLM", sub: "SSE Streaming", icon: Sparkles },
 ];

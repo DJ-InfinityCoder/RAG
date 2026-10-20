@@ -18,10 +18,10 @@ const features = [
         number: "02",
         icon: Database,
         title: "Pinecone Hybrid Vector Search",
-        tagline: "Dense Vectors + Sparse BM25 Keywords",
-        desc: "Executes simultaneous dense embedding vector similarity queries alongside sparse BM25 keyword matching using Reciprocal Rank Fusion (RRF) for 99.4% precision.",
+        tagline: "Dense Vectors + Full-Text Keywords",
+        desc: "Executes simultaneous dense embedding vector similarity queries alongside Postgres full-text keyword matching using Reciprocal Rank Fusion (RRF) for 99.4% precision.",
         badge: "Sparse + Dense RRF",
-        stats: ["Pinecone Indexing", "BM25 Sparse Match", "Reciprocal Rank Fusion"]
+        stats: ["Pinecone Indexing", "Postgres FTS Match", "Reciprocal Rank Fusion"]
     },
     {
         number: "03",

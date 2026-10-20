@@ -21,7 +21,7 @@ except ImportError:
 
 def reciprocal_rank_fusion(vector_docs: List[Document], keyword_docs: List[Document], k: int = 60) -> List[Document]:
     """
-    Combines dense vector similarity search and BM25 full-text keyword search results
+    Combines dense vector similarity search and Postgres full-text keyword search results
     using Reciprocal Rank Fusion (RRF).
     RRF Score(d) = sum(1 / (k + rank(d)))
     """
@@ -92,7 +92,7 @@ def keyword_search(search_query: str, session_id: str = None, user_id: str = Non
 
 def store_chunks_in_postgres(docs: List[Document]):
     """
-    Store document chunks into Supabase Postgres for BM25/FTS search.
+    Store document chunks into Supabase Postgres for FTS keyword search.
     """
     if SessionLocal is None or DocumentChunk is None:
         return

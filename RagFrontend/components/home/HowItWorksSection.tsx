@@ -25,7 +25,7 @@ const steps = [
         id: 2,
         title: "2. Hybrid Rerank & Quality Check",
         shortDesc: "Pinecone Sparse/Dense Fusion + FlashRank Reranker",
-        detail: "LangGraph queries Pinecone vectors & BM25 keyword indexes simultaneously, then re-scores top candidates using FlashRank before checking relevance quality.",
+        detail: "LangGraph queries Pinecone vectors & Postgres full-text keyword indexes simultaneously, then re-scores top candidates using FlashRank before checking relevance quality.",
         icon: Search,
         badge: "Rerank Loop",
         preview: {
@@ -225,7 +225,7 @@ export function HowItWorksSection() {
                                         <p className="font-bold text-[var(--text-main)]">Under the Hood Execution:</p>
                                         <p className="text-[var(--text-muted)] font-mono leading-relaxed min-h-[36px]">
                                             {activeStep === 1 && "> Validating 10MB limit... Chunking 500 tokens / 50 overlap... Upserting Pinecone vectors."}
-                                            {activeStep === 2 && "> Executing Pinecone Similarity Search & BM25 Keyword Search... Reranking top passages with FlashRank."}
+                                            {activeStep === 2 && "> Executing Pinecone Similarity Search & Postgres Full-Text Search... Reranking top passages with FlashRank."}
                                             {activeStep === 3 && "> LangGraph Checkpointer loaded session thread... Streaming SSE tokens via Gemini."}
                                         </p>
                                     </div>
