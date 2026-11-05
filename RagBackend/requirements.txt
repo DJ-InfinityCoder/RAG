@@ -11,7 +11,8 @@ langgraph
 python-dotenv
 pandas
 openpyxl
-psycopg2-binary
+psycopg[binary]
+psycopg[pool]
 sqlalchemy
 langchain-text-splitters
 langchain-community
@@ -21,6 +22,6 @@ pyjwt
 cryptography
 tenacity
 langgraph-checkpoint-postgres
-psycopg-pool
 pdfplumber
 python-docx
+flashrank
