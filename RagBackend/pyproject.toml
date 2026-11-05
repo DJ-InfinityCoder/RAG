@@ -18,7 +18,8 @@ dependencies = [
     "python-dotenv",
     "pandas",
     "openpyxl",
-    "psycopg2-binary",
+    "psycopg[binary]",
+    "psycopg[pool]",
     "sqlalchemy",
     "langchain-text-splitters",
     "langchain-community",
@@ -28,9 +29,9 @@ dependencies = [
     "cryptography",
     "tenacity",
     "langgraph-checkpoint-postgres",
-    "psycopg-pool",
     "pdfplumber",
-    "python-docx"
+    "python-docx",
+    "flashrank"
 ]
 
 [tool.vercel]
