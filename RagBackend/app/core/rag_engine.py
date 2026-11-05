@@ -166,7 +166,12 @@ Context:
         self.checkpointer = MemorySaver()
         if DATABASE_URL and PostgresSaver and ConnectionPool:
             try:
-                pg_url = DATABASE_URL.replace("postgresql+psycopg2://", "postgresql://")
+                pg_url = DATABASE_URL
+                # Normalize to plain postgresql:// for psycopg3 ConnectionPool
+                pg_url = pg_url.replace("postgresql+psycopg2://", "postgresql://")
+                pg_url = pg_url.replace("postgresql+psycopg://", "postgresql://")
+                if pg_url.startswith("postgres://"):
+                    pg_url = pg_url.replace("postgres://", "postgresql://", 1)
                 self.pool = ConnectionPool(conninfo=pg_url, max_size=10, kwargs={"autocommit": True})
                 self.checkpointer = PostgresSaver(self.pool)
                 self.checkpointer.setup()
