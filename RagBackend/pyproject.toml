@@ -10,7 +10,7 @@ dependencies = [
     "langchain",
     "langchain-google-genai",
     "langchain-pinecone",
-    "pinecone-client",
+    "pinecone",
     "python-multipart",
     "pypdf",
     "docx2txt",
