@@ -3,8 +3,10 @@ FastAPI dependency providers for RAGEngine instance and helper functions.
 """
 
 from fastapi import HTTPException
+from typing import TYPE_CHECKING
 from app.config import get_logger
-from app.core.rag_engine import RAGEngine
+if TYPE_CHECKING:
+    from app.core.rag_engine import RAGEngine
 from app.db.models import ChatSession
 from app.services.storage import storage_manager
 from app.api.schemas import SessionResponse
@@ -15,10 +17,11 @@ logger = get_logger("askdoc.api.deps")
 _rag_engine = None
 
 
-def get_rag_engine() -> RAGEngine:
+def get_rag_engine() -> "RAGEngine":
     global _rag_engine
     if _rag_engine is None:
         try:
+            from app.core.rag_engine import RAGEngine
             _rag_engine = RAGEngine()
         except Exception as e:
             logger.error(f"Failed to initialize RAGEngine: {e}", exc_info=True)

@@ -9,6 +9,11 @@ from concurrent.futures import ThreadPoolExecutor
 import multiprocessing.pool
 import multiprocessing.context
 
+IS_SERVERLESS = any(os.environ.get(name) for name in (
+    "VERCEL", "VERCEL_ENV", "VERCEL_REGION",
+    "AWS_LAMBDA_FUNCTION_NAME", "LAMBDA_TASK_ROOT",
+))
+
 
 class ServerlessAsyncResult:
     """Drop-in replacement for multiprocessing AsyncResult using concurrent.futures."""

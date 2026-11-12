@@ -11,7 +11,7 @@ export function HealthStatus() {
     return (
         <div
             className="h-9 px-3.5 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-main)] shadow-sm transition-all text-xs font-semibold flex items-center gap-2"
-            title={isOnline === false ? "Backend is offline. Check python server in RagBackend." : "System Status"}
+            title={isOnline === false ? "Unable to reach the server. Please try again shortly." : "System Status"}
         >
             <div className={cn(
                 "w-2 h-2 rounded-full shrink-0 transition-all",

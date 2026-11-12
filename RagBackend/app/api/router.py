@@ -28,7 +28,7 @@ def init_db():
             logger.warning(f"Could not execute migration for metrics column: {e}")
 
 
-def create_app() -> FastAPI:
+def create_app() -> CORSMiddleware:
     """FastAPI application factory."""
     try:
         init_db()
@@ -36,16 +36,6 @@ def create_app() -> FastAPI:
         logger.warning(f"Database init warning on startup: {e}")
 
     app = FastAPI(title="AskDoc API")
-
-    # CORS Setup - Specific origins from env + regex for Vercel deployment preview and prod URLs
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=ALLOWED_ORIGINS,
-        allow_origin_regex=r"^https?:\/\/(localhost(:\d+)?|127\.0\.0\.1(:\d+)?|.*\.vercel\.app|.*\.website)$",
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
 
     @app.get("/")
     async def root():
@@ -61,4 +51,12 @@ def create_app() -> FastAPI:
     app.include_router(documents_router)
     app.include_router(evaluations_router)
 
-    return app
+    # Wrap the whole ASGI app so unhandled application errors also receive CORS headers.
+    return CORSMiddleware(
+        app,
+        allow_origins=ALLOWED_ORIGINS,
+        allow_origin_regex=r"^https?:\/\/(localhost(:\d+)?|127\.0\.0\.1(:\d+)?|.*\.vercel\.app|.*\.website)$",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )

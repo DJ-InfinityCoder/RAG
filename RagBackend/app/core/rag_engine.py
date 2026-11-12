@@ -22,13 +22,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 # FlashRank uses ONNX Runtime which requires /dev/shm for multiprocessing.SemLock.
 # Vercel/Lambda serverless runtimes don't have /dev/shm, so we import conditionally.
-IS_SERVERLESS = bool(
-    os.environ.get("VERCEL")
-    or os.environ.get("VERCEL_ENV")
-    or os.environ.get("VERCEL_REGION")
-    or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
-    or os.environ.get("LAMBDA_TASK_ROOT")
-)
+from app.serverless_compat import IS_SERVERLESS
 Ranker = None
 if not IS_SERVERLESS:
     try:

@@ -10,10 +10,14 @@ from typing import Dict, Any, List, TYPE_CHECKING
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
-try:
-    from flashrank import RerankRequest
-except ImportError:
-    RerankRequest = None
+from app.serverless_compat import IS_SERVERLESS
+
+RerankRequest = None
+if not IS_SERVERLESS:
+    try:
+        from flashrank import RerankRequest
+    except Exception:
+        RerankRequest = None
 
 from app.config import GEMINI_INPUT_COST_PER_1M, GEMINI_OUTPUT_COST_PER_1M, get_logger
 from app.services.search import reciprocal_rank_fusion

@@ -16,7 +16,7 @@ export function OfflineBanner() {
             <div className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
                 <span className="font-medium">
-                    Backend is offline. Please run <code className="bg-red-700 px-1.5 py-0.5 rounded text-sm font-mono">python main.py</code> in RagBackend folder.
+                    Unable to reach the server. Please try again in a moment.
                 </span>
             </div>
             <button
