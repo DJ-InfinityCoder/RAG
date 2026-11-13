@@ -1,6 +1,5 @@
 import io
 from typing import List, Union, Any
-import pandas as pd
 from langchain_core.documents import Document
 
 from app.config import get_logger
@@ -175,6 +174,7 @@ def extract_xlsx_sheets(source: Union[str, bytes], filename: str) -> List[Docume
 def _fallback_xlsx(raw_bytes: bytes, filename: str) -> List[Document]:
     """Pure in-memory pandas Excel fallback extraction."""
     try:
+        import pandas as pd
         excel_sheets = pd.read_excel(io.BytesIO(raw_bytes), sheet_name=None)
         documents = []
         for sheet_name, df in excel_sheets.items():

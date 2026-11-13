@@ -16,7 +16,6 @@ dependencies = [
     "docx2txt",
     "langgraph",
     "python-dotenv",
-    "pandas",
     "openpyxl",
     "psycopg[binary]",
     "psycopg[pool]",
@@ -35,6 +34,7 @@ dependencies = [
 
 [project.optional-dependencies]
 reranking = ["flashrank"]
+excel-fallback = ["pandas"]
 
 [tool.vercel]
 entrypoint = "main:app"

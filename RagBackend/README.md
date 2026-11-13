@@ -52,6 +52,8 @@
 Vercel installs the runtime dependencies in `pyproject.toml`. FlashRank/ONNX is optional
 and disabled on serverless; the deployed pipeline uses reciprocal rank fusion instead.
 For local neural reranking, install `pip install '.[reranking]'` in `RagBackend`.
+XLSX parsing uses openpyxl; the optional pandas fallback can be installed with
+`pip install '.[excel-fallback]'` for local use.
 Keep `langchain` and `langchain-community` out of the deployment dependencies unless
 an actual import needs them: their extra packages increase the function bundle.
 

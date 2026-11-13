@@ -9,7 +9,6 @@ pypdf
 docx2txt
 langgraph
 python-dotenv
-pandas
 openpyxl
 psycopg[binary]
 psycopg[pool]

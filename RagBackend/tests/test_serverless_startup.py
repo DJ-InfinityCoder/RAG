@@ -14,7 +14,7 @@ import sys
 
 class BlockFlashRank(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):
-        if fullname.split('.')[0] in ('flashrank', 'onnxruntime'):
+        if fullname.split('.')[0] in ('flashrank', 'onnxruntime', 'pandas'):
             raise RuntimeError('ONNX must not load in serverless')
 
 sys.meta_path.insert(0, BlockFlashRank())
@@ -22,6 +22,16 @@ from main import app
 assert 'app.core.rag_engine' not in sys.modules
 from app.core import graph_nodes
 assert graph_nodes.RerankRequest is None
+import io
+from openpyxl import Workbook
+from app.document_processors.xlsx import extract_xlsx_sheets
+workbook = Workbook()
+workbook.active.append(['Product', 'Revenue'])
+workbook.active.append(['Deployment check', 42])
+data = io.BytesIO()
+workbook.save(data)
+documents = extract_xlsx_sheets(data.getvalue(), 'check.xlsx')
+assert documents and '42' in documents[0].page_content
 from fastapi.testclient import TestClient
 
 @app.app.get('/test-error')
