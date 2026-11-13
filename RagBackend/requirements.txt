@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-langchain
+langchain-core
 langchain-google-genai
 langchain-pinecone
 pinecone
@@ -15,7 +15,6 @@ psycopg[binary]
 psycopg[pool]
 sqlalchemy
 langchain-text-splitters
-langchain-community
 requests
 python-pptx
 pyjwt
@@ -24,4 +23,4 @@ tenacity
 langgraph-checkpoint-postgres
 pdfplumber
 python-docx
-flashrank
+httpx

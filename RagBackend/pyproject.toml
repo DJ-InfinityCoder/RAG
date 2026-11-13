@@ -7,7 +7,7 @@ requires-python = ">=3.10"
 dependencies = [
     "fastapi",
     "uvicorn",
-    "langchain",
+    "langchain-core",
     "langchain-google-genai",
     "langchain-pinecone",
     "pinecone",
@@ -22,7 +22,6 @@ dependencies = [
     "psycopg[pool]",
     "sqlalchemy",
     "langchain-text-splitters",
-    "langchain-community",
     "requests",
     "python-pptx",
     "pyjwt",
@@ -31,8 +30,11 @@ dependencies = [
     "langgraph-checkpoint-postgres",
     "pdfplumber",
     "python-docx",
-    "flashrank"
+    "httpx"
 ]
+
+[project.optional-dependencies]
+reranking = ["flashrank"]
 
 [tool.vercel]
 entrypoint = "main:app"

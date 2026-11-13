@@ -49,6 +49,12 @@
 
 ## Overview
 
+Vercel installs the runtime dependencies in `pyproject.toml`. FlashRank/ONNX is optional
+and disabled on serverless; the deployed pipeline uses reciprocal rank fusion instead.
+For local neural reranking, install `pip install '.[reranking]'` in `RagBackend`.
+Keep `langchain` and `langchain-community` out of the deployment dependencies unless
+an actual import needs them: their extra packages increase the function bundle.
+
 **AskDoc Backend** is an enterprise-grade async FastAPI service built to transform unstructured documents (PDFs with complex multi-column tables, Word documents, PowerPoint presentations, Excel spreadsheets, and CSVs) into accurate, cited conversational intelligence.
 
 It replaces standard naive RAG pipelines with a **10-node cyclic LangGraph state machine**, pairing **Pinecone Inference embeddings (`llama-text-embed-v2`, 1024 dimensions)** with **PostgreSQL Full-Text Search**, **Reciprocal Rank Fusion (RRF)**, and **FlashRank reranking** to eliminate hallucinations and maximize factual precision.
